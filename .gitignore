@@ -1,3 +1,4 @@
+src/generated/prisma
 # Node.js
 node_modules/
 npm-debug.log*
@@ -87,3 +88,4 @@ jspm_packages/
 .yarn-integrity
 .claude
 CLAUDE.md
+PROJECT_INDEX.md
