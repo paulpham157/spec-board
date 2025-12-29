@@ -235,7 +235,58 @@ pnpm prisma generate  # Regenerate client
 
 ## Deployment
 
+### Docker (Recommended)
+
+The easiest way to run SpecBoard in production:
+
+```bash
+# Start everything (app + database)
+docker compose up -d --build
+
+# View logs
+docker compose logs -f app
+
+# Stop services
+docker compose down
+```
+
+**Environment Variables** (optional, defaults shown):
+
+```bash
+# .env
+POSTGRES_USER=specboard
+POSTGRES_PASSWORD=specboard
+POSTGRES_DB=specboard
+POSTGRES_PORT=5432
+APP_PORT=3000
+```
+
+**Volume Mounts**: The app container mounts your home directory read-only to access spec-kit projects.
+
+### PM2 (Process Manager)
+
+For running without Docker:
+
+```bash
+# Build first
+pnpm build
+
+# Start with PM2
+pm2 start ecosystem.config.cjs
+
+# View logs
+pm2 logs specboard
+
+# Other commands
+pm2 status              # Check status
+pm2 restart specboard   # Restart
+pm2 stop specboard      # Stop
+```
+
+### Manual Deployment
+
 1. Set up PostgreSQL database
 2. Configure `DATABASE_URL` environment variable
 3. Run `pnpm prisma migrate deploy`
-4. Deploy to Vercel, Railway, or your preferred platform
+4. Run `pnpm build && pnpm start`
+5. Deploy to Vercel, Railway, or your preferred platform

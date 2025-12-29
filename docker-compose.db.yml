@@ -1,0 +1,33 @@
+# ============================================================================
+# SpecBoard Database Only
+# Use this when running the app via PM2 or local development
+# ============================================================================
+#
+# Usage:
+#   docker compose -f docker-compose.db.yml up -d    # Start database
+#   docker compose -f docker-compose.db.yml down     # Stop database
+#   docker compose -f docker-compose.db.yml logs -f  # View logs
+#
+# ============================================================================
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: specboard-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-specboard}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-specboard}
+      POSTGRES_DB: ${POSTGRES_DB:-specboard}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - specboard_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-specboard} -d ${POSTGRES_DB:-specboard}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  specboard_data:

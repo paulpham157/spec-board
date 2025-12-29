@@ -1,10 +1,25 @@
+# ============================================================================
+# SpecBoard Docker Compose
+# Full stack: Next.js app + PostgreSQL database
+# ============================================================================
+#
+# Usage:
+#   docker compose up -d              # Start all services
+#   docker compose up -d --build      # Rebuild and start
+#   docker compose logs -f app        # View app logs
+#   docker compose down               # Stop all services
+#   docker compose down -v            # Stop and remove volumes
+#
+# ============================================================================
+
 services:
+  # ---------------------------------------------------------------------------
+  # PostgreSQL Database
+  # ---------------------------------------------------------------------------
   db:
     image: postgres:16-alpine
     container_name: specboard-db
     restart: unless-stopped
-    env_file:
-      - .env
     environment:
       POSTGRES_USER: ${POSTGRES_USER:-specboard}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-specboard}
@@ -18,6 +33,43 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    networks:
+      - specboard-network
+
+  # ---------------------------------------------------------------------------
+  # Next.js Application
+  # ---------------------------------------------------------------------------
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: specboard-app
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: postgresql://${POSTGRES_USER:-specboard}:${POSTGRES_PASSWORD:-specboard}@db:5432/${POSTGRES_DB:-specboard}
+    ports:
+      - "${APP_PORT:-3000}:3000"
+    volumes:
+      # Mount host directories for spec-kit project access
+      - ${HOME}:/host-home:ro
+      - /Users:/Users:ro
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/projects"]
+      interval: 30s
+      timeout: 10s
+      start_period: 10s
+      retries: 3
+    networks:
+      - specboard-network
 
 volumes:
   specboard_data:
+
+networks:
+  specboard-network:
+    driver: bridge

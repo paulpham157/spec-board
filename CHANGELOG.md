@@ -8,6 +8,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Docker Support** - Full containerization for production deployment:
+  - Multi-stage Dockerfile with pnpm and Prisma support
+  - `docker-compose.yml` for full stack (app + PostgreSQL)
+  - `docker-compose.db.yml` for database-only (use with PM2)
+  - `docker-entrypoint.sh` for automatic database migrations
+- **PM2 Process Manager** - `ecosystem.config.cjs` with:
+  - Production and development environment configs
+  - Log file management
+  - Graceful shutdown handling
+  - Memory limit auto-restart
 - **New Home Page UI** - Split view layout with recent projects and "Open Project" button
 - **Recent Projects List** - Track recently opened projects with full context:
   - Project name and path
@@ -27,6 +37,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Home page redesigned from project registration to quick-access interface
 - Project URLs now use encoded paths instead of database slugs
 - Recent projects stored in localStorage with rich metadata
+- Next.js config updated with `output: "standalone"` for Docker
 
 ### Fixed
 - HTML validation error: nested `<button>` elements in recent projects list
