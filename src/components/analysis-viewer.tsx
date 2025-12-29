@@ -109,15 +109,57 @@ export function AnalysisViewer({ analysis, className }: AnalysisViewerProps) {
     setTimeout(() => setFeedback(null), 3000);
   };
 
-  // No analysis data available
+  // No analysis data available - show documentation
   if (!analysis.jsonData && !analysis.markdownContent) {
     return (
-      <div className={cn('flex flex-col items-center justify-center py-12 text-zinc-500', className)}>
-        <TrendingUp className="w-12 h-12 mb-4 opacity-50" />
-        <p className="text-lg font-medium">No analysis yet</p>
-        <p className="text-sm mt-2 text-center">
-          Run <code className="bg-[var(--secondary)] px-1.5 py-0.5 rounded">/speckit.analyze</code> to generate spec alignment analysis
-        </p>
+      <div className={cn('flex flex-col py-6', className)}>
+        <div className="flex flex-col items-center mb-6 text-zinc-500">
+          <TrendingUp className="w-12 h-12 mb-4 opacity-50" />
+          <p className="text-lg font-medium">No analysis yet</p>
+        </div>
+
+        <div className="space-y-4 text-sm">
+          <div className="p-4 bg-[var(--secondary)]/30 rounded-lg">
+            <h4 className="font-medium mb-2">Expected Files</h4>
+            <p className="text-[var(--muted-foreground)] mb-2">SpecBoard expects analysis files at:</p>
+            <ul className="list-disc list-inside text-[var(--muted-foreground)] space-y-1 font-mono text-xs">
+              <li>specs/&lt;feature&gt;/analysis/analysis.json</li>
+              <li>specs/&lt;feature&gt;/analysis/analysis.md</li>
+            </ul>
+          </div>
+
+          <div className="p-4 bg-[var(--secondary)]/30 rounded-lg">
+            <h4 className="font-medium mb-2">JSON Schema</h4>
+            <pre className="text-xs font-mono bg-zinc-900 p-3 rounded overflow-x-auto text-zinc-300">
+{`{
+  "version": "1.0",
+  "timestamp": "2025-01-01T00:00:00Z",
+  "specAlignment": {
+    "score": 85,
+    "totalRequirements": 10,
+    "implemented": 7,
+    "partial": 2,
+    "missing": 1,
+    "items": [
+      {
+        "requirement": "User can login",
+        "status": "implemented",
+        "evidence": "src/auth/login.ts"
+      }
+    ]
+  }
+}`}
+            </pre>
+          </div>
+
+          <div className="p-4 bg-[var(--secondary)]/30 rounded-lg">
+            <h4 className="font-medium mb-2">How It Works</h4>
+            <p className="text-[var(--muted-foreground)]">
+              SpecBoard is a viewer only. The <code className="bg-zinc-800 px-1.5 py-0.5 rounded">/speckit.analyze</code> command
+              (from SoupSpec or another spec-kit tool) must output files matching this format.
+            </p>
+          </div>
+        </div>
       </div>
     );
   }
