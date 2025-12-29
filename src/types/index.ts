@@ -28,13 +28,42 @@ export interface TaskGroup {
 }
 
 // Spec-Kit File types for additional files (T004)
-export type SpecKitFileType = 'spec' | 'plan' | 'tasks' | 'research' | 'data-model' | 'quickstart' | 'contract' | 'checklist';
+export type SpecKitFileType = 'spec' | 'plan' | 'tasks' | 'research' | 'data-model' | 'quickstart' | 'contract' | 'checklist' | 'analysis';
 
 export interface SpecKitFile {
   type: SpecKitFileType;
   path: string;
   content: string;
   exists: boolean;
+}
+
+// Analysis types for spec alignment tracking
+export interface AnalysisItem {
+  requirement: string;
+  status: 'implemented' | 'partial' | 'missing';
+  evidence?: string;
+}
+
+export interface SpecAlignment {
+  score: number;
+  totalRequirements: number;
+  implemented: number;
+  partial: number;
+  missing: number;
+  items: AnalysisItem[];
+}
+
+export interface AnalysisData {
+  version: string;
+  timestamp: string;
+  specAlignment: SpecAlignment;
+}
+
+export interface FeatureAnalysis {
+  jsonData: AnalysisData | null;
+  markdownContent: string | null;
+  jsonPath: string | null;
+  markdownPath: string | null;
 }
 
 // Clarification types for tracking Q&A history
@@ -105,6 +134,8 @@ export interface Feature {
   specContent: string | null;
   planContent: string | null;
   additionalFiles: SpecKitFile[];
+  // Analysis data for spec alignment tracking
+  analysis: FeatureAnalysis | null;
 }
 
 export interface Project {

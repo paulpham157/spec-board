@@ -16,7 +16,9 @@ import type {
   TechnicalContext,
   TaskGroup,
   SpecKitFile,
-  SpecKitFileType
+  SpecKitFileType,
+  FeatureAnalysis,
+  AnalysisData
 } from '@/types';
 
 /**
@@ -372,6 +374,47 @@ export function parseAdditionalFiles(featurePath: string): SpecKitFile[] {
 }
 
 /**
+ * Parse analysis directory for spec alignment data
+ * Reads analysis.json and analysis.md from analysis/ directory
+ */
+export function parseAnalysis(featurePath: string): FeatureAnalysis {
+  const analysisDir = path.join(featurePath, 'analysis');
+  const jsonPath = path.join(analysisDir, 'analysis.json');
+  const mdPath = path.join(analysisDir, 'analysis.md');
+
+  let jsonData: AnalysisData | null = null;
+  let markdownContent: string | null = null;
+  let jsonPathResult: string | null = null;
+  let markdownPathResult: string | null = null;
+
+  try {
+    if (fs.existsSync(jsonPath)) {
+      const jsonContent = fs.readFileSync(jsonPath, 'utf-8');
+      jsonData = JSON.parse(jsonContent) as AnalysisData;
+      jsonPathResult = jsonPath;
+    }
+  } catch (error) {
+    console.error(`Failed to parse analysis.json at ${jsonPath}:`, error);
+  }
+
+  try {
+    if (fs.existsSync(mdPath)) {
+      markdownContent = fs.readFileSync(mdPath, 'utf-8');
+      markdownPathResult = mdPath;
+    }
+  } catch (error) {
+    console.error(`Failed to read analysis.md at ${mdPath}:`, error);
+  }
+
+  return {
+    jsonData,
+    markdownContent,
+    jsonPath: jsonPathResult,
+    markdownPath: markdownPathResult,
+  };
+}
+
+/**
  * Parse constitution.md file
  * Extracts principles, sections, and version metadata
  */
@@ -502,6 +545,9 @@ export async function parseFeature(featurePath: string): Promise<Feature | null>
     // Parse additional spec-kit files
     const additionalFiles = parseAdditionalFiles(featurePath);
 
+    // Parse analysis data
+    const analysis = parseAnalysis(featurePath);
+
     const completedTasks = tasks.filter(t => t.completed).length;
     const totalTasks = tasks.length;
     const inProgressTasks = tasks.filter(t => !t.completed).length;
@@ -534,6 +580,8 @@ export async function parseFeature(featurePath: string): Promise<Feature | null>
       specContent,
       planContent,
       additionalFiles,
+      // Analysis data for spec alignment
+      analysis: (analysis.jsonData || analysis.markdownContent) ? analysis : null,
     };
   } catch (error) {
     console.error(`Error parsing feature at ${featurePath}:`, error);

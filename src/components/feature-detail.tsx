@@ -14,10 +14,11 @@ import { DataModelViewer } from '@/components/data-model-viewer';
 import { QuickstartViewer } from '@/components/quickstart-viewer';
 import { ContractsViewer } from '@/components/contracts-viewer';
 import { ChecklistViewer } from '@/components/checklist-viewer';
+import { AnalysisViewer } from '@/components/analysis-viewer';
 import { Tooltip } from '@/components/tooltip';
 import { useFocusTrap, announce } from '@/lib/accessibility';
 
-type TabId = 'overview' | 'spec' | 'plan' | 'tasks' | 'research' | 'data-model' | 'quickstart' | 'contracts' | 'checklists';
+type TabId = 'overview' | 'spec' | 'plan' | 'tasks' | 'research' | 'data-model' | 'quickstart' | 'contracts' | 'checklists' | 'analysis';
 
 type TabStatus = 'complete' | 'in-progress' | 'pending' | 'none';
 
@@ -318,6 +319,7 @@ export function FeatureDetail({ feature, onClose }: FeatureDetailProps) {
     { id: 'quickstart', label: 'Quickstart', show: hasAdditionalFile('quickstart'), status: 'none', shortcut: 7 },
     { id: 'contracts', label: 'Contracts', show: contractFiles.length > 0, status: 'none', shortcut: 8 },
     { id: 'checklists', label: 'Checklists', show: checklistFiles.length > 0, status: 'none', shortcut: 9 },
+    { id: 'analysis', label: 'Analysis', show: feature.analysis !== null, status: 'none', shortcut: 0 },
   ];
 
   const visibleTabs = tabs.filter(t => t.show);
@@ -495,6 +497,9 @@ export function FeatureDetail({ feature, onClose }: FeatureDetailProps) {
           )}
           {activeTab === 'checklists' && (
             <ChecklistViewer checklists={checklistFiles} />
+          )}
+          {activeTab === 'analysis' && feature.analysis && (
+            <AnalysisViewer analysis={feature.analysis} />
           )}
         </div>
 
