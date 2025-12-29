@@ -319,7 +319,7 @@ export function FeatureDetail({ feature, onClose }: FeatureDetailProps) {
     { id: 'quickstart', label: 'Quickstart', show: hasAdditionalFile('quickstart'), status: 'none', shortcut: 7 },
     { id: 'contracts', label: 'Contracts', show: contractFiles.length > 0, status: 'none', shortcut: 8 },
     { id: 'checklists', label: 'Checklists', show: checklistFiles.length > 0, status: 'none', shortcut: 9 },
-    { id: 'analysis', label: 'Analysis', show: feature.analysis !== null, status: 'none', shortcut: 0 },
+    { id: 'analysis', label: 'Analysis', show: true, status: 'none', shortcut: 0 },
   ];
 
   const visibleTabs = tabs.filter(t => t.show);
@@ -498,8 +498,8 @@ export function FeatureDetail({ feature, onClose }: FeatureDetailProps) {
           {activeTab === 'checklists' && (
             <ChecklistViewer checklists={checklistFiles} />
           )}
-          {activeTab === 'analysis' && feature.analysis && (
-            <AnalysisViewer analysis={feature.analysis} />
+          {activeTab === 'analysis' && (
+            <AnalysisViewer analysis={feature.analysis ?? { jsonData: null, markdownContent: null, jsonPath: null, markdownPath: null }} />
           )}
         </div>
 
