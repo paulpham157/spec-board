@@ -159,6 +159,13 @@ export function AnalysisViewer({ analysis, className }: AnalysisViewerProps) {
               (from SoupSpec or another spec-kit tool) must output files matching this format.
             </p>
           </div>
+
+          <div className="p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg">
+            <h4 className="font-medium mb-2 text-yellow-400">Note</h4>
+            <p className="text-[var(--muted-foreground)]">
+              The current spec-kit version does not generate analysis files yet. This feature is ready for when spec-kit adds <code className="bg-zinc-800 px-1.5 py-0.5 rounded">/speckit.analyze</code> support.
+            </p>
+          </div>
         </div>
       </div>
     );
