@@ -88,7 +88,7 @@ COPY --from=deps /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=deps /app/node_modules/prisma ./node_modules/prisma
 
 # Copy entrypoint script
-COPY --chown=nextjs:nodejs docker-entrypoint.sh ./
+COPY --chown=nextjs:nodejs docker/docker-entrypoint.sh ./
 RUN chmod +x docker-entrypoint.sh
 
 # Create logs directory

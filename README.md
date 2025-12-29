@@ -1,6 +1,6 @@
 # SpecBoard
 
-> Visual dashboard for [spec-kit](https://github.com/spec-kit/spec-kit) projects
+> Visual dashboard for [spec-kit](https://github.com/github/spec-kit/spec-kit) projects
 
 ![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)
 
@@ -87,8 +87,9 @@ pnpm dev
 
 | Document | Description |
 |----------|-------------|
-| [CONTRIBUTORS.md](CONTRIBUTORS.md) | Development guide, API reference |
+| [CONTRIBUTING.md](CONTRIBUTING.md) | Development guide, API reference |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
+| [docs/PROJECT_INDEX.md](docs/PROJECT_INDEX.md) | Codebase structure |
 
 ## License
 
