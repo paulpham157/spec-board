@@ -339,6 +339,35 @@ export function parseAdditionalFiles(featurePath: string): SpecKitFile[] {
     console.error(`Failed to read contracts directory ${contractsDir}:`, error);
   }
 
+  // Parse checklists directory (similar to contracts)
+  const checklistsDir = path.join(featurePath, 'checklists');
+  try {
+    if (fs.existsSync(checklistsDir) && fs.statSync(checklistsDir).isDirectory()) {
+      const checklistFiles = fs.readdirSync(checklistsDir).filter(f => f.endsWith('.md'));
+      for (const f of checklistFiles) {
+        const checklistPath = path.join(checklistsDir, f);
+        try {
+          additionalFiles.push({
+            type: 'checklist',
+            path: checklistPath,
+            content: fs.readFileSync(checklistPath, 'utf-8'),
+            exists: true,
+          });
+        } catch (error) {
+          console.error(`Failed to read checklist file ${checklistPath}:`, error);
+          additionalFiles.push({
+            type: 'checklist',
+            path: checklistPath,
+            content: '',
+            exists: false,
+          });
+        }
+      }
+    }
+  } catch (error) {
+    console.error(`Failed to read checklists directory ${checklistsDir}:`, error);
+  }
+
   return additionalFiles;
 }
 

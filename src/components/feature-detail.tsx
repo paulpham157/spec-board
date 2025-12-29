@@ -13,10 +13,11 @@ import { ResearchViewer } from '@/components/research-viewer';
 import { DataModelViewer } from '@/components/data-model-viewer';
 import { QuickstartViewer } from '@/components/quickstart-viewer';
 import { ContractsViewer } from '@/components/contracts-viewer';
+import { ChecklistViewer } from '@/components/checklist-viewer';
 import { Tooltip } from '@/components/tooltip';
 import { useFocusTrap, announce } from '@/lib/accessibility';
 
-type TabId = 'overview' | 'spec' | 'plan' | 'tasks' | 'research' | 'data-model' | 'quickstart' | 'contracts';
+type TabId = 'overview' | 'spec' | 'plan' | 'tasks' | 'research' | 'data-model' | 'quickstart' | 'contracts' | 'checklists';
 
 type TabStatus = 'complete' | 'in-progress' | 'pending' | 'none';
 
@@ -304,6 +305,9 @@ export function FeatureDetail({ feature, onClose }: FeatureDetailProps) {
   // Get contract files
   const contractFiles = feature.additionalFiles?.filter(f => f.type === 'contract') ?? [];
 
+  // Get checklist files
+  const checklistFiles = feature.additionalFiles?.filter(f => f.type === 'checklist') ?? [];
+
   const tabs: { id: TabId; label: string; show: boolean; status: TabStatus; shortcut: number }[] = [
     { id: 'overview', label: 'Overview', show: true, status: 'none', shortcut: 1 },
     { id: 'spec', label: 'Spec', show: true, status: getTabStatus('spec', feature), shortcut: 2 },
@@ -313,6 +317,7 @@ export function FeatureDetail({ feature, onClose }: FeatureDetailProps) {
     { id: 'data-model', label: 'Data Model', show: hasAdditionalFile('data-model'), status: 'none', shortcut: 6 },
     { id: 'quickstart', label: 'Quickstart', show: hasAdditionalFile('quickstart'), status: 'none', shortcut: 7 },
     { id: 'contracts', label: 'Contracts', show: contractFiles.length > 0, status: 'none', shortcut: 8 },
+    { id: 'checklists', label: 'Checklists', show: checklistFiles.length > 0, status: 'none', shortcut: 9 },
   ];
 
   const visibleTabs = tabs.filter(t => t.show);
@@ -487,6 +492,9 @@ export function FeatureDetail({ feature, onClose }: FeatureDetailProps) {
           )}
           {activeTab === 'contracts' && (
             <ContractsViewer contracts={contractFiles} />
+          )}
+          {activeTab === 'checklists' && (
+            <ChecklistViewer checklists={checklistFiles} />
           )}
         </div>
 

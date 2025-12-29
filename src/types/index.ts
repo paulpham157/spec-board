@@ -28,7 +28,7 @@ export interface TaskGroup {
 }
 
 // Spec-Kit File types for additional files (T004)
-export type SpecKitFileType = 'spec' | 'plan' | 'tasks' | 'research' | 'data-model' | 'quickstart' | 'contract';
+export type SpecKitFileType = 'spec' | 'plan' | 'tasks' | 'research' | 'data-model' | 'quickstart' | 'contract' | 'checklist';
 
 export interface SpecKitFile {
   type: SpecKitFileType;
