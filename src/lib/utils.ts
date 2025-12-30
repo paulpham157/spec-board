@@ -1,6 +1,6 @@
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
-import type { FeatureStage } from "@/types";
+import type { Feature, FeatureStage } from "@/types";
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -32,10 +32,10 @@ export function getStageLabel(stage: string): string {
   return labels[stage] || stage;
 }
 
-// Kanban column types for simplified 3-column view
-export type KanbanColumn = 'backlog' | 'in_progress' | 'done';
+// Kanban column types for 4-column view (with review column)
+export type KanbanColumn = 'backlog' | 'in_progress' | 'review' | 'done';
 
-// Map feature stages to kanban columns
+// Map feature stages to kanban columns (legacy - use getFeatureKanbanColumn for checklist support)
 export function getKanbanColumn(stage: FeatureStage): KanbanColumn {
   switch (stage) {
     case 'specify':
@@ -51,10 +51,32 @@ export function getKanbanColumn(stage: FeatureStage): KanbanColumn {
   }
 }
 
+/**
+ * Get kanban column for a feature, considering checklist completion.
+ * - Backlog: specify, plan stages
+ * - In Progress: tasks, implement stages
+ * - Review: complete stage but has incomplete checklists
+ * - Done: complete stage with all checklists done (or no checklists)
+ */
+export function getFeatureKanbanColumn(feature: Feature): KanbanColumn {
+  const baseColumn = getKanbanColumn(feature.stage);
+
+  // Only apply review logic for features that would otherwise be "done"
+  if (baseColumn === 'done') {
+    // If feature has checklists and not all items are completed, put in review
+    if (feature.hasChecklists && feature.completedChecklistItems < feature.totalChecklistItems) {
+      return 'review';
+    }
+  }
+
+  return baseColumn;
+}
+
 export function getKanbanColumnLabel(column: KanbanColumn): string {
   const labels: Record<KanbanColumn, string> = {
     backlog: 'Backlog',
     in_progress: 'In Progress',
+    review: 'Review',
     done: 'Done',
   };
   return labels[column];

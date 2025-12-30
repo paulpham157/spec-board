@@ -1,6 +1,7 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import { watch } from 'chokidar';
 import { parseProject } from '@/lib/parser';
+import { isPathSafe } from '@/lib/path-utils';
 
 export const dynamic = 'force-dynamic';
 
@@ -9,7 +10,19 @@ export async function GET(request: NextRequest) {
   const projectPath = searchParams.get('path');
 
   if (!projectPath) {
-    return new Response('Project path is required', { status: 400 });
+    return NextResponse.json(
+      { error: 'Project path is required' },
+      { status: 400 }
+    );
+  }
+
+  // Validate path is safe to watch (prevent path traversal attacks)
+  const { safe, resolvedPath } = isPathSafe(projectPath);
+  if (!safe) {
+    return NextResponse.json(
+      { error: 'Access denied: Path is outside allowed directories' },
+      { status: 403 }
+    );
   }
 
   const encoder = new TextEncoder();
@@ -17,7 +30,7 @@ export async function GET(request: NextRequest) {
   const stream = new ReadableStream({
     async start(controller) {
       // Send initial data
-      const project = await parseProject(projectPath);
+      const project = await parseProject(resolvedPath);
       if (project) {
         const data = `data: ${JSON.stringify({ type: 'update', data: project })}\n\n`;
         controller.enqueue(encoder.encode(data));
@@ -26,7 +39,7 @@ export async function GET(request: NextRequest) {
       // Watch for file changes
       // Using polling to reliably detect changes from all sources (IDE, AI tools, scripts)
       // fs.watch (event-based) can miss in-place file writes on some platforms
-      const watcher = watch(projectPath, {
+      const watcher = watch(resolvedPath, {
         ignored: /(^|[\/\\])\../, // ignore dotfiles
         persistent: true,
         ignoreInitial: true,
@@ -37,7 +50,7 @@ export async function GET(request: NextRequest) {
 
       const handleChange = async () => {
         try {
-          const updatedProject = await parseProject(projectPath);
+          const updatedProject = await parseProject(resolvedPath);
           if (updatedProject) {
             const data = `data: ${JSON.stringify({ type: 'update', data: updatedProject })}\n\n`;
             controller.enqueue(encoder.encode(data));

@@ -138,6 +138,10 @@ export interface Feature {
   additionalFiles: SpecKitFile[];
   // Analysis data for spec alignment tracking
   analysis: FeatureAnalysis | null;
+  // Checklist completion tracking
+  hasChecklists: boolean;
+  totalChecklistItems: number;
+  completedChecklistItems: number;
 }
 
 export interface Project {
@@ -148,20 +152,6 @@ export interface Project {
   // Project-level constitution
   constitution: Constitution | null;
   hasConstitution: boolean;
-}
-
-export interface DashboardMetrics {
-  totalFeatures: number;
-  featuresByStage: Record<FeatureStage, number>;
-  totalTasks: number;
-  completedTasks: number;
-  inProgressTasks: number;
-  pendingTasks: number;
-  completionPercentage: number;
-  tasksByPhase: Record<string, number>;
-  // Clarification metrics
-  totalClarifications: number;
-  clarificationsByFeature: Record<string, number>;
 }
 
 export interface WebSocketMessage {

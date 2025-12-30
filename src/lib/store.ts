@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Project, Feature, DashboardMetrics, FeatureStage } from '@/types';
+import type { Project, Feature, FeatureStage } from '@/types';
 
 // Recent project with full metadata for the new UI
 export interface RecentProject {
@@ -30,7 +30,6 @@ interface ProjectStore {
   setProjectPath: (path: string | null) => void;
   addRecentProject: (project: Project, slug?: string) => void;
   loadRecentProjects: () => void;
-  getMetrics: () => DashboardMetrics;
 }
 
 const RECENT_PROJECTS_KEY = 'specboard-recent-projects';
@@ -125,66 +124,5 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   loadRecentProjects: () => {
     const projects = loadRecentProjectsFromStorage();
     set({ recentProjects: projects });
-  },
-
-  getMetrics: (): DashboardMetrics => {
-    const { project } = get();
-    if (!project) {
-      return {
-        totalFeatures: 0,
-        featuresByStage: { specify: 0, plan: 0, tasks: 0, implement: 0, complete: 0 },
-        totalTasks: 0,
-        completedTasks: 0,
-        inProgressTasks: 0,
-        pendingTasks: 0,
-        completionPercentage: 0,
-        tasksByPhase: {},
-        totalClarifications: 0,
-        clarificationsByFeature: {},
-      };
-    }
-
-    const featuresByStage: Record<FeatureStage, number> = {
-      specify: 0,
-      plan: 0,
-      tasks: 0,
-      implement: 0,
-      complete: 0,
-    };
-
-    let totalTasks = 0;
-    let completedTasks = 0;
-    let totalClarifications = 0;
-    const tasksByPhase: Record<string, number> = {};
-    const clarificationsByFeature: Record<string, number> = {};
-
-    for (const feature of project.features) {
-      featuresByStage[feature.stage]++;
-      totalTasks += feature.totalTasks;
-      completedTasks += feature.completedTasks;
-      totalClarifications += feature.totalClarifications;
-      clarificationsByFeature[feature.id] = feature.totalClarifications;
-
-      for (const phase of feature.phases) {
-        const phaseName = phase.name.split('(')[0].trim();
-        tasksByPhase[phaseName] = (tasksByPhase[phaseName] || 0) + phase.tasks.length;
-      }
-    }
-
-    const pendingTasks = totalTasks - completedTasks;
-    const inProgressTasks = project.features.reduce((sum, f) => sum + f.inProgressTasks, 0);
-
-    return {
-      totalFeatures: project.features.length,
-      featuresByStage,
-      totalTasks,
-      completedTasks,
-      inProgressTasks,
-      pendingTasks,
-      completionPercentage: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
-      tasksByPhase,
-      totalClarifications,
-      clarificationsByFeature,
-    };
   },
 }));

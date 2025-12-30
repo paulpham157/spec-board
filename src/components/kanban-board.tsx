@@ -1,14 +1,14 @@
 'use client';
 
-import { useCallback, useRef, KeyboardEvent } from 'react';
-import { cn, getKanbanColumn, getKanbanColumnLabel, type KanbanColumn } from '@/lib/utils';
+import { KeyboardEvent } from 'react';
+import { cn, getFeatureKanbanColumn, getKanbanColumnLabel, type KanbanColumn } from '@/lib/utils';
 import type { Feature } from '@/types';
-import { FileText, ListTodo, Plus, GitBranch } from 'lucide-react';
+import { Plus, GitBranch } from 'lucide-react';
 import { PriorityBadge } from '@/components/priority-badge';
 import { Tooltip } from '@/components/tooltip';
 import { announce } from '@/lib/accessibility';
 
-const COLUMNS: KanbanColumn[] = ['backlog', 'in_progress', 'done'];
+const COLUMNS: KanbanColumn[] = ['backlog', 'in_progress', 'review', 'done'];
 
 interface FeatureCardProps {
   feature: Feature;
@@ -78,34 +78,12 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
         </div>
       )}
 
-      {/* Badges and task count */}
-      <div className="flex items-center justify-between text-xs text-[var(--muted-foreground)]">
-        <div className="flex items-center gap-2">
-          {feature.hasSpec && (
-            <span className="flex items-center gap-1 opacity-60">
-              <FileText className="w-3 h-3" />
-              spec
-            </span>
-          )}
-          {feature.hasPlan && (
-            <span className="flex items-center gap-1 opacity-60">
-              <FileText className="w-3 h-3" />
-              plan
-            </span>
-          )}
-          {feature.hasTasks && (
-            <span className="flex items-center gap-1 opacity-60">
-              <ListTodo className="w-3 h-3" />
-              tasks
-            </span>
-          )}
+      {/* Task count */}
+      {feature.totalTasks > 0 && (
+        <div className="text-xs text-[var(--muted-foreground)] tabular-nums">
+          {feature.completedTasks}/{feature.totalTasks}
         </div>
-        {feature.totalTasks > 0 && (
-          <span className="tabular-nums">
-            {feature.completedTasks}/{feature.totalTasks}
-          </span>
-        )}
-      </div>
+      )}
 
       {/* Thin progress bar */}
       {feature.totalTasks > 0 && (
@@ -127,9 +105,10 @@ interface EmptyColumnProps {
 
 function EmptyColumn({ column }: EmptyColumnProps) {
   const hints: Record<KanbanColumn, string> = {
-    backlog: 'Drag features here',
+    backlog: 'Features being specified',
     in_progress: 'Features being worked on',
-    done: 'Completed features',
+    review: 'Awaiting checklist completion',
+    done: 'Fully completed features',
   };
 
   return (
@@ -154,7 +133,7 @@ function KanbanColumnComponent({ column, features, onFeatureClick }: KanbanColum
 
   return (
     <div
-      className="flex flex-col flex-1 min-w-[300px] max-w-[400px]"
+      className="flex flex-col flex-1 min-w-[250px] max-w-[350px]"
       role="region"
       aria-label={`${columnLabel} column`}
     >
@@ -204,15 +183,16 @@ interface KanbanBoardProps {
 }
 
 export function KanbanBoard({ features, onFeatureClick }: KanbanBoardProps) {
-  // Group features by kanban column
+  // Group features by kanban column (using new function that considers checklists)
   const featuresByColumn = COLUMNS.reduce((acc, column) => {
-    acc[column] = features.filter((f) => getKanbanColumn(f.stage) === column);
+    acc[column] = features.filter((f) => getFeatureKanbanColumn(f) === column);
     return acc;
   }, {} as Record<KanbanColumn, Feature[]>);
 
   // Calculate totals for screen reader summary
   const totalFeatures = features.length;
   const inProgressCount = featuresByColumn['in_progress'].length;
+  const reviewCount = featuresByColumn['review'].length;
   const doneCount = featuresByColumn['done'].length;
 
   return (
@@ -223,7 +203,7 @@ export function KanbanBoard({ features, onFeatureClick }: KanbanBoardProps) {
       {/* Screen reader summary */}
       <div className="sr-only" aria-live="polite">
         {totalFeatures} total features: {featuresByColumn['backlog'].length} in backlog,
-        {inProgressCount} in progress, {doneCount} done
+        {inProgressCount} in progress, {reviewCount} in review, {doneCount} done
       </div>
 
       {COLUMNS.map((column) => (

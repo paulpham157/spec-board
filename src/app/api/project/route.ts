@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { parseProject } from '@/lib/parser';
+import { isPathSafe } from '@/lib/path-utils';
 
 // Disable Next.js route caching - always read fresh data from filesystem
 export const dynamic = 'force-dynamic';
@@ -15,8 +16,17 @@ export async function GET(request: NextRequest) {
     );
   }
 
+  // Validate path is safe to access (prevent path traversal attacks)
+  const { safe, resolvedPath } = isPathSafe(projectPath);
+  if (!safe) {
+    return NextResponse.json(
+      { error: 'Access denied: Path is outside allowed directories' },
+      { status: 403 }
+    );
+  }
+
   try {
-    const project = await parseProject(projectPath);
+    const project = await parseProject(resolvedPath);
 
     if (!project) {
       return NextResponse.json(

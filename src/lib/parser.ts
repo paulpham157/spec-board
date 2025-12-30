@@ -250,6 +250,23 @@ export function parseBranchName(content: string): string | null {
 }
 
 /**
+ * Parse checklist completion from markdown content.
+ * Counts all checkbox items (- [ ] and - [x]) in the content.
+ * Returns total and completed counts.
+ */
+export function parseChecklistCompletion(content: string): { total: number; completed: number } {
+  // Match unchecked: - [ ] or * [ ]
+  const uncheckedMatches = content.match(/^[\s]*[-*]\s*\[\s\]/gm) || [];
+  // Match checked: - [x] or - [X] or * [x] or * [X]
+  const checkedMatches = content.match(/^[\s]*[-*]\s*\[[xX]\]/gm) || [];
+
+  const completed = checkedMatches.length;
+  const total = uncheckedMatches.length + completed;
+
+  return { total, completed };
+}
+
+/**
  * Group tasks by user story marker (T010)
  */
 export function groupTasksByUserStory(tasks: Task[], userStories: UserStory[]): TaskGroup[] {
@@ -580,6 +597,17 @@ export async function parseFeature(featurePath: string): Promise<Feature | null>
     // Parse analysis data
     const analysis = parseAnalysis(featurePath);
 
+    // Calculate checklist completion from all checklist files
+    const checklists = additionalFiles.filter(f => f.type === 'checklist');
+    const hasChecklists = checklists.length > 0;
+    let totalChecklistItems = 0;
+    let completedChecklistItems = 0;
+    for (const checklist of checklists) {
+      const { total, completed } = parseChecklistCompletion(checklist.content);
+      totalChecklistItems += total;
+      completedChecklistItems += completed;
+    }
+
     const completedTasks = tasks.filter(t => t.completed).length;
     const totalTasks = tasks.length;
     const inProgressTasks = tasks.filter(t => !t.completed).length;
@@ -615,6 +643,10 @@ export async function parseFeature(featurePath: string): Promise<Feature | null>
       additionalFiles,
       // Analysis data for spec alignment
       analysis: (analysis.jsonData || analysis.markdownContent) ? analysis : null,
+      // Checklist completion tracking
+      hasChecklists,
+      totalChecklistItems,
+      completedChecklistItems,
     };
   } catch (error) {
     console.error(`Error parsing feature at ${featurePath}:`, error);

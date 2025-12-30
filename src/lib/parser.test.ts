@@ -8,6 +8,7 @@ import {
   parseUserStories,
   parseTechnicalContext,
   groupTasksByUserStory,
+  parseChecklistCompletion,
 } from './parser';
 
 describe('parseTaskLine', () => {
@@ -672,5 +673,68 @@ describe('groupTasksByUserStory (T011)', () => {
     expect(result).toHaveLength(1);
     expect(result[0].storyId).toBe('US99');
     expect(result[0].storyTitle).toBe('US99'); // Uses ID as title when story not found
+  });
+});
+
+describe('parseChecklistCompletion', () => {
+  it('should count unchecked and checked items', () => {
+    const content = `# Checklist
+- [ ] Item 1
+- [x] Item 2
+- [ ] Item 3
+- [X] Item 4
+`;
+    const result = parseChecklistCompletion(content);
+    expect(result.total).toBe(4);
+    expect(result.completed).toBe(2);
+  });
+
+  it('should handle all unchecked items', () => {
+    const content = `- [ ] Task 1
+- [ ] Task 2
+- [ ] Task 3`;
+    const result = parseChecklistCompletion(content);
+    expect(result.total).toBe(3);
+    expect(result.completed).toBe(0);
+  });
+
+  it('should handle all checked items', () => {
+    const content = `- [x] Done 1
+- [X] Done 2`;
+    const result = parseChecklistCompletion(content);
+    expect(result.total).toBe(2);
+    expect(result.completed).toBe(2);
+  });
+
+  it('should handle empty content', () => {
+    const result = parseChecklistCompletion('');
+    expect(result.total).toBe(0);
+    expect(result.completed).toBe(0);
+  });
+
+  it('should handle content with no checkboxes', () => {
+    const content = `# Just a heading
+Some regular text
+- A bullet point without checkbox`;
+    const result = parseChecklistCompletion(content);
+    expect(result.total).toBe(0);
+    expect(result.completed).toBe(0);
+  });
+
+  it('should handle asterisk bullet points', () => {
+    const content = `* [ ] Asterisk unchecked
+* [x] Asterisk checked`;
+    const result = parseChecklistCompletion(content);
+    expect(result.total).toBe(2);
+    expect(result.completed).toBe(1);
+  });
+
+  it('should handle indented checkboxes', () => {
+    const content = `- [ ] Top level
+  - [ ] Indented
+    - [x] Double indented`;
+    const result = parseChecklistCompletion(content);
+    expect(result.total).toBe(3);
+    expect(result.completed).toBe(1);
   });
 });

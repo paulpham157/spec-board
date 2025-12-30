@@ -3,57 +3,11 @@
 import { useEffect, useCallback, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { KanbanBoard } from '@/components/kanban-board';
-import { DashboardMetricsPanel } from '@/components/dashboard-metrics';
 import { FeatureDetail } from '@/components/feature-detail';
 import { ConstitutionPanel } from '@/components/constitution-panel';
 import { ClarityHistoryPanel } from '@/components/clarity-history';
 import { FolderOpen, RefreshCw, Wifi, Home, Link as LinkIcon } from 'lucide-react';
-import type { Project, Feature, DashboardMetrics, FeatureStage } from '@/types';
-
-function calculateMetrics(project: Project): DashboardMetrics {
-  const featuresByStage: Record<FeatureStage, number> = {
-    specify: 0,
-    plan: 0,
-    tasks: 0,
-    implement: 0,
-    complete: 0,
-  };
-
-  let totalTasks = 0;
-  let completedTasks = 0;
-  let totalClarifications = 0;
-  const tasksByPhase: Record<string, number> = {};
-  const clarificationsByFeature: Record<string, number> = {};
-
-  for (const feature of project.features) {
-    featuresByStage[feature.stage]++;
-    totalTasks += feature.totalTasks;
-    completedTasks += feature.completedTasks;
-    totalClarifications += feature.totalClarifications;
-    clarificationsByFeature[feature.id] = feature.totalClarifications;
-
-    for (const phase of feature.phases) {
-      const phaseName = phase.name.split('(')[0].trim();
-      tasksByPhase[phaseName] = (tasksByPhase[phaseName] || 0) + phase.tasks.length;
-    }
-  }
-
-  const pendingTasks = totalTasks - completedTasks;
-  const inProgressTasks = project.features.reduce((sum, f) => sum + f.inProgressTasks, 0);
-
-  return {
-    totalFeatures: project.features.length,
-    featuresByStage,
-    totalTasks,
-    completedTasks,
-    inProgressTasks,
-    pendingTasks,
-    completionPercentage: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
-    tasksByPhase,
-    totalClarifications,
-    clarificationsByFeature,
-  };
-}
+import type { Project, Feature } from '@/types';
 
 export default function ProjectPage() {
   const params = useParams();
@@ -149,8 +103,6 @@ export default function ProjectPage() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  const metrics = project ? calculateMetrics(project) : null;
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -175,7 +127,7 @@ export default function ProjectPage() {
     );
   }
 
-  if (!project || !metrics) {
+  if (!project) {
     return null;
   }
 
@@ -227,9 +179,6 @@ export default function ProjectPage() {
       {/* Main content */}
       <main className="flex-1 container mx-auto px-4 py-6">
         <div className="space-y-6">
-          {/* Dashboard metrics */}
-          <DashboardMetricsPanel metrics={metrics} />
-
           {/* Constitution and Clarity History */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
             <ConstitutionPanel
@@ -238,7 +187,7 @@ export default function ProjectPage() {
             />
             <ClarityHistoryPanel
               features={project.features}
-              totalClarifications={metrics.totalClarifications}
+              totalClarifications={project.features.reduce((sum, f) => sum + f.totalClarifications, 0)}
             />
           </div>
 
