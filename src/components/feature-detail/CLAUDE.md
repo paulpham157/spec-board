@@ -10,14 +10,15 @@ This directory contains the redesigned Feature Detail Modal - a full-screen moda
 
 | File | Purpose | Lines |
 |------|---------|-------|
-| `feature-detail.tsx` | Main modal component with state management | ~420 |
-| `types.ts` | TypeScript types, constants, and helper functions | ~180 |
+| `feature-detail.tsx` | Main modal component with state management | ~510 |
+| `types.ts` | TypeScript types, constants, and helper functions | ~190 |
 | `split-view.tsx` | Resizable split-pane container | ~160 |
 | `nav-sidebar.tsx` | Left navigation with phase groupings | ~115 |
 | `content-pane.tsx` | Content renderer for each section type | ~varies |
 | `header-bar.tsx` | Top bar with title and action buttons | ~70 |
 | `status-header.tsx` | Progress bar and next action display | ~80 |
-| `nav-item.tsx` | Individual navigation item with drag support | ~varies |
+| `nav-item.tsx` | Individual navigation item with drag support | ~100 |
+| `section-icon.tsx` | Semantic icons for each section type | ~75 |
 | `index.tsx` | Public export | ~5 |
 
 ## Architecture
@@ -28,6 +29,7 @@ FeatureDetail (modal container)
 ├── NavSidebar
 │   ├── StatusHeader (progress, next task)
 │   └── NavItem[] (grouped by phase)
+│       └── SectionIcon (semantic icon per section)
 └── SplitView
     ├── ContentPane (left)
     ├── Divider (resizable)
@@ -137,3 +139,25 @@ const PHASE_CONFIG: Record<WorkflowPhase, { label: string; sections: SectionId[]
 - Split ratio is clamped to prevent panes from being too small
 - Section visibility is determined by `show` property in config
 - `buildSectionConfigs` checks `additionalFiles` for optional sections
+- In split view, both left and right pane sections are highlighted in nav
+- `selectedNavIndex` syncs with `activeSection` on click to prevent stale highlights
+
+## Semantic Icons (section-icon.tsx)
+
+Each section has a semantic icon that conveys document meaning:
+
+| Section | Icon | Color Logic |
+|---------|------|-------------|
+| Overview | (none) | - |
+| Spec | `FileCode` | Green if `hasSpec`, muted otherwise |
+| Plan | `FileText` | Green if `hasPlan`, muted otherwise |
+| Research | `BookOpen` | Green if file exists |
+| Data Model | `Database` | Green if file exists |
+| Tasks | `ListTodo` | Green if `hasTasks`, muted otherwise |
+| Analysis | `AlertTriangle`/`CheckCircle`/`FileSearch` | Based on analysis severity |
+| Checklists | `ClipboardCheck` | Green if `hasChecklists` |
+
+Additional badges:
+- **Spec**: Shows clarifications count with `MessageCircle` icon
+- **Tasks**: Shows User Story count (e.g., "5 US")
+- **Checklists**: Shows checklist file count (e.g., "3 checklists")

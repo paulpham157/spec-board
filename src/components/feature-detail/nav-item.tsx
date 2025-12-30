@@ -13,6 +13,7 @@ interface NavItemProps {
   isActive: boolean;
   isSelected: boolean;
   taskCount?: { completed: number; total: number };
+  groupCount?: { count: number; label: string };
   onClick: () => void;
   onDragStart: () => void;
   onDragEnd: () => void;
@@ -26,6 +27,7 @@ export function NavItem({
   isActive,
   isSelected,
   taskCount,
+  groupCount,
   onClick,
   onDragStart,
   onDragEnd,
@@ -65,6 +67,13 @@ export function NavItem({
 
       {/* Label */}
       <span className="flex-1 text-left truncate">{label}</span>
+
+      {/* Group count badge (e.g., "5 US" or "3 checklists") */}
+      {groupCount && groupCount.count > 0 && (
+        <span className="text-xs text-[var(--muted-foreground)]">
+          {groupCount.count} {groupCount.label}
+        </span>
+      )}
 
       {/* Task count badge */}
       {taskCount && taskCount.total > 0 && (

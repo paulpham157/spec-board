@@ -27,6 +27,7 @@ export interface SectionConfig {
   show: boolean;
   status: SectionStatus;
   taskCount?: { completed: number; total: number };
+  groupCount?: { count: number; label: string };  // e.g., "5 US" or "3 checklists"
   filePath?: string;
 }
 

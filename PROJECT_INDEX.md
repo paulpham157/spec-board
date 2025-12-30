@@ -1,7 +1,7 @@
 # PROJECT_INDEX.md
 
 > Auto-generated codebase index for SpecBoard
-> Last updated: 2025-12-30
+> Last updated: 2025-12-31
 
 ## Overview
 
@@ -182,22 +182,20 @@ App
 │   └── OpenProjectModal
 │
 └── Project Page
-    ├── DashboardMetricsPanel
     ├── ConstitutionPanel
     ├── ClarityHistoryPanel
     ├── KanbanBoard
     │   └── FeatureCard (per feature)
-    └── FeatureDetail (modal)
-        ├── OverviewTab
-        ├── SpecViewer
-        ├── PlanViewer
-        ├── TasksTab / TaskGroupList
-        ├── ResearchViewer
-        ├── DataModelViewer
-        ├── QuickstartViewer
-        ├── ContractsViewer
-        ├── ChecklistViewer
-        └── AnalysisViewer
+    └── FeatureDetail (full-screen modal)
+        ├── HeaderBar
+        ├── NavSidebar
+        │   ├── StatusHeader
+        │   └── NavItem[] (grouped by phase)
+        │       └── SectionIcon
+        └── SplitView
+            ├── ContentPane (left)
+            │   └── [SpecViewer|PlanViewer|TaskGroup|...]
+            └── ContentPane (right, optional)
 ```
 
 ## Key Files Reference
@@ -206,7 +204,8 @@ App
 |------|---------|-------|
 | `src/lib/parser.ts` | Core markdown parsing logic | ~690 |
 | `src/app/projects/[name]/page.tsx` | Project dashboard | ~265 |
-| `src/components/feature-detail.tsx` | Feature modal with tabs | ~520 |
+| `src/components/feature-detail/feature-detail.tsx` | Feature modal with split-view | ~510 |
+| `src/components/feature-detail/types.ts` | Feature detail types and constants | ~190 |
 | `src/components/kanban-board.tsx` | Kanban board UI | ~240 |
 | `src/types/index.ts` | All TypeScript types | ~170 |
 | `src/lib/store.ts` | Zustand state management | ~150 |
@@ -309,10 +308,13 @@ model Project {
 
 ## Recent Changes
 
-- **Feature Detail Modal Redesign**: Full-screen modal with split-view, grouped navigation by workflow phase (DEFINE/PLAN/EXECUTE), drag-to-split functionality, and comprehensive keyboard shortcuts
+- **Feature Detail Modal Redesign**: Full-screen modal with split-view, 5-phase navigation (OVERVIEW, PLANNING, CODING, QA, QC), drag-to-split functionality, and comprehensive keyboard shortcuts
+- **Semantic Icons**: Section icons that convey document meaning (existence, clarifications count, analysis severity)
+- **Group Counts**: Tasks show User Story count, Checklists show checklist file count
+- **Split View Highlighting**: Both panes highlighted in nav when split view is active
 - **Database slug routing**: URLs now use clean slugs (`/projects/todolist`) instead of encoded paths
 - **Auto-registration**: Projects auto-register when opened, generating unique slugs
-- **Analysis viewer**: New tab for spec alignment tracking with JSON/markdown support
+- **Analysis viewer**: Tab for spec alignment tracking with JSON/markdown support
 - **Checklist viewer**: Support for checklist files in feature directories
 
 ## Generated CLAUDE.md Files

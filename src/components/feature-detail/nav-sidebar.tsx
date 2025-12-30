@@ -10,6 +10,7 @@ interface NavSidebarProps {
   feature: Feature;
   sections: SectionConfig[];
   activeSection: SectionId;
+  rightPaneSection?: SectionId | null;  // For split view highlighting
   selectedIndex: number;
   onSectionClick: (sectionId: SectionId) => void;
   onDragStart: (sectionId: SectionId) => void;
@@ -42,6 +43,7 @@ export function NavSidebar({
   feature,
   sections,
   activeSection,
+  rightPaneSection,
   selectedIndex,
   onSectionClick,
   onDragStart,
@@ -93,9 +95,10 @@ export function NavSidebar({
                       id={section.id}
                       label={section.label}
                       feature={feature}
-                      isActive={activeSection === section.id}
+                      isActive={activeSection === section.id || rightPaneSection === section.id}
                       isSelected={selectedIndex === visibleIndex}
                       taskCount={section.taskCount}
+                      groupCount={section.groupCount}
                       onClick={() => onSectionClick(section.id)}
                       onDragStart={() => onDragStart(section.id)}
                       onDragEnd={onDragEnd}

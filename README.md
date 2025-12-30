@@ -93,7 +93,7 @@ pnpm dev
 |----------|-------------|
 | [CONTRIBUTING.md](CONTRIBUTING.md) | Development guide, API reference |
 | [CHANGELOG.md](CHANGELOG.md) | Version history |
-| [docs/PROJECT_INDEX.md](docs/PROJECT_INDEX.md) | Codebase structure |
+| [PROJECT_INDEX.md](PROJECT_INDEX.md) | Codebase structure |
 
 ## License
 

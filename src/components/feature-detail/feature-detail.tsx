@@ -79,6 +79,9 @@ function buildSectionConfigs(feature: Feature): SectionConfig[] {
       show: true,
       status: getSectionStatus('tasks', feature),
       taskCount: { completed: feature.completedTasks, total: feature.totalTasks },
+      groupCount: feature.taskGroups.length > 0
+        ? { count: feature.taskGroups.length, label: 'US' }
+        : undefined,
       filePath: feature.path ? `${feature.path}/tasks.md` : undefined,
     },
     // QA phase
@@ -98,6 +101,9 @@ function buildSectionConfigs(feature: Feature): SectionConfig[] {
       status: 'none',
       taskCount: feature.hasChecklists
         ? { completed: feature.completedChecklistItems, total: feature.totalChecklistItems }
+        : undefined,
+      groupCount: checklistFiles.length > 0
+        ? { count: checklistFiles.length, label: checklistFiles.length === 1 ? 'checklist' : 'checklists' }
         : undefined,
     },
   ];
@@ -134,11 +140,16 @@ export function FeatureDetail({ feature, onClose }: FeatureDetailProps) {
       setActiveSection(sectionId);
       setSplitView(prev => ({ ...prev, leftPane: sectionId }));
     }
+    // Update selected nav index to match clicked section
+    const clickedIndex = visibleSections.findIndex(s => s.id === sectionId);
+    if (clickedIndex >= 0) {
+      setSelectedNavIndex(clickedIndex);
+    }
     const section = sections.find(s => s.id === sectionId);
     if (section) {
       announce(`Opened ${section.label}`);
     }
-  }, [splitView.isActive, splitView.focusedPane, sections]);
+  }, [splitView.isActive, splitView.focusedPane, sections, visibleSections]);
 
   // Handle drag start
   const handleDragStart = useCallback((sectionId: SectionId) => {
@@ -434,6 +445,7 @@ export function FeatureDetail({ feature, onClose }: FeatureDetailProps) {
             feature={feature}
             sections={sections}
             activeSection={splitView.isActive ? splitView.leftPane : activeSection}
+            rightPaneSection={splitView.isActive ? splitView.rightPane : null}
             selectedIndex={selectedNavIndex}
             onSectionClick={handleSectionClick}
             onDragStart={handleDragStart}

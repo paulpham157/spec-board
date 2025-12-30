@@ -69,13 +69,16 @@ spec-board/
 │   │   └── page.tsx       # Home page
 │   ├── components/        # React components
 │   │   ├── feature-detail/  # Feature modal (split-view, navigation)
-│   │   │   ├── feature-detail.tsx  # Main modal component
+│   │   │   ├── feature-detail.tsx  # Main modal component (~510 lines)
 │   │   │   ├── split-view.tsx      # Resizable split panes
-│   │   │   ├── nav-sidebar.tsx     # Left navigation
+│   │   │   ├── nav-sidebar.tsx     # Left navigation by phase
+│   │   │   ├── nav-item.tsx        # Navigation item with drag support
+│   │   │   ├── section-icon.tsx    # Semantic icons per section
 │   │   │   ├── content-pane.tsx    # Section content renderer
+│   │   │   ├── header-bar.tsx      # Modal header with actions
+│   │   │   ├── status-header.tsx   # Progress bar and next action
 │   │   │   └── types.ts            # Types and constants
 │   │   ├── kanban-board.tsx
-│   │   ├── dashboard-metrics.tsx
 │   │   └── ...
 │   ├── lib/               # Utilities and business logic
 │   │   ├── parser.ts      # Markdown file parser

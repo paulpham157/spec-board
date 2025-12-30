@@ -8,9 +8,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 ### Added
+- **Semantic Section Icons** - Navigation icons that convey document meaning:
+  - Icons indicate document existence via color (green if exists, muted otherwise)
+  - Spec section shows clarifications count badge
+  - Analysis section shows severity-based icons (warning/success/search)
+- **Group Counts in Navigation** - Additional context for sections:
+  - Tasks section shows User Story count (e.g., "5 US")
+  - Checklists section shows checklist file count (e.g., "3 checklists")
+- **Split View Dual Highlighting** - Both left and right pane sections highlighted in nav when split view is active
+
+### Changed
+- **Navigation Phase Structure** - Reorganized from 3 phases to 5 phases:
+  - OVERVIEW: Overview, Spec
+  - PLANNING: Plan, Research, Data Model
+  - CODING: Tasks
+  - QA: Analysis
+  - QC: Checklists
+- Moved Spec section from EXECUTE to OVERVIEW phase
+- Renamed EXECUTE phase to CODING
+
+### Fixed
+- Navigation highlight sync issue where Overview stayed highlighted after clicking other sections
+- `selectedNavIndex` now syncs with `activeSection` on click
+
+## [0.3.0] - 2024-12-30
+
+### Added
 - **Feature Detail Modal Redesign** - Full-screen modal with enhanced navigation:
   - Split-view support with drag-to-split and resizable divider
-  - Left navigation sidebar grouped by workflow phase (DEFINE/PLAN/EXECUTE)
+  - Left navigation sidebar grouped by workflow phase
   - Status header with progress bar and "Next Action" display
   - Comprehensive keyboard shortcuts (1-9 for sections, Ctrl+\ for split, Tab to switch panes)
   - Drag navigation items to content area to open in split view

@@ -16,14 +16,16 @@ This directory contains all React components used throughout the application. Mo
 
 | File | Purpose |
 |------|---------|
-| `kanban-board.tsx` | 3-column Kanban board (Backlog, In Progress, Done) |
-| `feature-detail.tsx` | Modal with tabbed feature details |
-| `dashboard-metrics.tsx` | Project metrics cards and charts |
+| `kanban-board.tsx` | 3-column Kanban board (Backlog, In Progress, Done, Review) |
 | `recent-projects-list.tsx` | Recent projects with full context (stats, time, completion %) |
 | `open-project-modal.tsx` | Project search modal with path autocomplete |
 | `project-selector.tsx` | Legacy filesystem browser (deprecated) |
 | `task-group.tsx` | Task list grouped by user story |
 | `markdown-renderer.tsx` | Safe markdown-to-HTML rendering |
+| `spec-viewer.tsx` | Spec.md content with user stories and clarifications |
+| `analysis-viewer.tsx` | Analysis results with spec alignment |
+| `checklist-viewer.tsx` | Checklist items display |
+| `tooltip.tsx` | Reusable tooltip component |
 
 ## Component Inventory
 
@@ -42,15 +44,16 @@ This directory contains all React components used throughout the application. Mo
 ### Feature Display
 | Component | Props | Purpose |
 |-----------|-------|---------|
-| `FeatureDetail` | feature, onClose | Full feature modal with tabs |
-| `SpecViewer` | content | Render spec.md content |
+| `FeatureDetail` (in `feature-detail/`) | feature, onClose | Full-screen modal with split-view |
+| `SpecViewer` | content | Render spec.md content with user stories |
 | `PlanViewer` | content | Render plan.md content |
 | `TaskGroup` | taskGroup, projectPath | Tasks grouped by user story |
+| `AnalysisViewer` | analysis | Spec alignment and analysis results |
+| `ChecklistViewer` | checklists | Checklist items with completion status |
 
 ### Metrics & Info
 | Component | Props | Purpose |
 |-----------|-------|---------|
-| `DashboardMetricsPanel` | metrics | Stats cards and progress chart |
 | `ConstitutionPanel` | constitution, hasConstitution | Project principles display |
 | `ClarityHistoryPanel` | features, totalClarifications | Q&A history timeline |
 
@@ -62,11 +65,14 @@ This directory contains all React components used throughout the application. Mo
 | `QuickstartViewer` | content | Quickstart guide display |
 | `DataModelViewer` | content | Data model documentation |
 | `ContractsViewer` | contracts | API contracts display |
+| `AnalysisViewer` | analysis | Spec alignment analysis |
+| `ChecklistViewer` | checklists | Checklist items display |
 
 ### Utilities
 | Component | Props | Purpose |
 |-----------|-------|---------|
 | `PriorityBadge` | priority | P1/P2/P3 colored badge |
+| `Tooltip` | content, children | Hover tooltip wrapper |
 
 ## Patterns & Conventions
 
