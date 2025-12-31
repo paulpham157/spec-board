@@ -200,6 +200,7 @@ export default function ProjectPage() {
             <ClarityHistoryPanel
               features={project.features}
               totalClarifications={project.features.reduce((sum, f) => sum + f.totalClarifications, 0)}
+              onFeatureClick={handleFeatureClick}
             />
           </div>
 
@@ -215,10 +216,11 @@ export default function ProjectPage() {
       </main>
 
       {/* Feature detail modal */}
-      {selectedFeature && (
+      {selectedFeature && project && (
         <FeatureDetail
           feature={selectedFeature}
           onClose={handleCloseFeature}
+          hasConstitution={project.hasConstitution}
         />
       )}
     </div>

@@ -26,7 +26,7 @@ interface OpenProjectModalProps {
 }
 
 export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalProps) {
-  const [pathInput, setPathInput] = useState('~');
+  const [pathInput, setPathInput] = useState('~/');
   const [suggestions, setSuggestions] = useState<DirectoryEntry[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -58,11 +58,11 @@ export function OpenProjectModal({ isOpen, onClose, onOpen }: OpenProjectModalPr
   // Focus input and load home directory when modal opens
   useEffect(() => {
     if (isOpen) {
-      setPathInput('~');
+      setPathInput('~/');
       loadHomeDirectory();
       setTimeout(() => inputRef.current?.focus(), 100);
     } else {
-      setPathInput('~');
+      setPathInput('~/');
       setSuggestions([]);
       setShowSuggestions(false);
       setPreview(null);

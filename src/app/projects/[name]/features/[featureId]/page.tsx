@@ -16,6 +16,7 @@ export default function FeaturePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [projectPath, setProjectPath] = useState<string | null>(null);
+  const [hasConstitution, setHasConstitution] = useState(false);
 
   const loadFeature = useCallback(async () => {
     setIsLoading(true);
@@ -47,6 +48,7 @@ export default function FeaturePage() {
         throw new Error('Feature "' + featureId + '" not found');
       }
       setFeature(foundFeature);
+      setHasConstitution(data.hasConstitution);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
@@ -131,6 +133,7 @@ export default function FeaturePage() {
       <FeatureDetail
         feature={feature}
         onClose={handleClose}
+        hasConstitution={hasConstitution}
       />
     </div>
   );

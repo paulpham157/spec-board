@@ -19,6 +19,7 @@ import {
 interface FeatureDetailProps {
   feature: Feature;
   onClose: () => void;
+  hasConstitution?: boolean;
 }
 
 // Build section configurations from feature
@@ -109,7 +110,7 @@ function buildSectionConfigs(feature: Feature): SectionConfig[] {
   ];
 }
 
-export function FeatureDetail({ feature, onClose }: FeatureDetailProps) {
+export function FeatureDetail({ feature, onClose, hasConstitution = false }: FeatureDetailProps) {
   const modalRef = useRef<HTMLDivElement>(null);
   const [activeSection, setActiveSection] = useState<SectionId>('overview');
   const [selectedNavIndex, setSelectedNavIndex] = useState(0);
@@ -498,6 +499,7 @@ export function FeatureDetail({ feature, onClose }: FeatureDetailProps) {
               leftSection={splitView.isActive ? splitView.leftPane : activeSection}
               rightSection={splitView.isActive ? splitView.rightPane : null}
               feature={feature}
+              hasConstitution={hasConstitution}
               splitRatio={splitView.splitRatio}
               onRatioChange={handleRatioChange}
               onCloseRight={handleCloseRight}

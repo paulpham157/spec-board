@@ -74,7 +74,6 @@ export function StatusHeader({ feature, progressPercentage, nextTask }: StatusHe
           )}
         </div>
       )}
-
     </div>
   );
 }

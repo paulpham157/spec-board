@@ -2,6 +2,19 @@ import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import type { Feature, FeatureStage } from "@/types";
 
+// Suggested command types for spec-kit workflow
+export interface SuggestedCommand {
+  command: string;
+  title: string;
+  description: string;
+  isOptional: boolean;
+}
+
+export interface CommandSuggestion {
+  primary: SuggestedCommand | null;
+  optional: SuggestedCommand | null;
+}
+
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
@@ -139,4 +152,123 @@ export function openInEditor(filePath: string | undefined, lineNumber?: number):
       message: 'Failed to open file. Is VS Code installed?',
     };
   }
+}
+
+/**
+ * Get suggested spec-kit command based on feature state and project constitution.
+ * Follows the spec-kit workflow:
+ * /speckit.constitution → /speckit.specify → /speckit.clarify (optional)
+ *         ↓
+ * /speckit.plan → /speckit.checklist (optional) → /speckit.tasks
+ *         ↓
+ * /speckit.analyze (optional) → /speckit.implement
+ */
+export function getSuggestedCommand(feature: Feature, hasConstitution: boolean): CommandSuggestion {
+  // Check constitution first (project-level)
+  if (!hasConstitution) {
+    return {
+      primary: {
+        command: '/speckit.constitution',
+        title: 'Create Project Constitution',
+        description: 'Define project principles, tech stack, and constraints that guide all feature development.',
+        isOptional: false,
+      },
+      optional: null,
+    };
+  }
+
+  // Stage: specify - no spec.md
+  if (!feature.hasSpec) {
+    return {
+      primary: {
+        command: '/speckit.specify',
+        title: 'Create Feature Specification',
+        description: 'Define user stories, acceptance criteria, and requirements for this feature.',
+        isOptional: false,
+      },
+      optional: null,
+    };
+  }
+
+  // Stage: plan - has spec, no plan.md
+  if (!feature.hasPlan) {
+    return {
+      primary: {
+        command: '/speckit.plan',
+        title: 'Create Implementation Plan',
+        description: 'Design the technical approach, architecture, and implementation strategy.',
+        isOptional: false,
+      },
+      optional: feature.totalClarifications === 0 ? {
+        command: '/speckit.clarify',
+        title: 'Clarify Requirements',
+        description: 'Ask questions to resolve ambiguities in the specification.',
+        isOptional: true,
+      } : null,
+    };
+  }
+
+  // Stage: tasks - has plan, no tasks.md
+  if (!feature.hasTasks) {
+    return {
+      primary: {
+        command: '/speckit.tasks',
+        title: 'Generate Task Breakdown',
+        description: 'Break down the implementation plan into actionable, trackable tasks.',
+        isOptional: false,
+      },
+      optional: !feature.hasChecklists ? {
+        command: '/speckit.checklist',
+        title: 'Create QA Checklist',
+        description: 'Generate quality assurance checklists for testing and review.',
+        isOptional: true,
+      } : null,
+    };
+  }
+
+  // Stage: implement - has tasks, not all complete
+  if (feature.completedTasks < feature.totalTasks) {
+    return {
+      primary: {
+        command: '/speckit.implement',
+        title: 'Continue Implementation',
+        description: `${feature.totalTasks - feature.completedTasks} tasks remaining. Continue building the feature.`,
+        isOptional: false,
+      },
+      optional: !feature.analysis ? {
+        command: '/speckit.analyze',
+        title: 'Analyze Progress',
+        description: 'Check implementation progress against the specification.',
+        isOptional: true,
+      } : null,
+    };
+  }
+
+  // Stage: complete - all tasks done
+  if (feature.completedTasks === feature.totalTasks && feature.totalTasks > 0) {
+    // Check if analysis exists
+    if (!feature.analysis) {
+      return {
+        primary: {
+          command: '/speckit.analyze',
+          title: 'Verify Implementation',
+          description: 'Analyze the completed feature against the specification for alignment.',
+          isOptional: false,
+        },
+        optional: null,
+      };
+    }
+
+    // Feature is complete with analysis
+    return {
+      primary: null,
+      optional: null,
+    };
+  }
+
+  // Default fallback
+  return {
+    primary: null,
+    optional: null,
+  };
 }

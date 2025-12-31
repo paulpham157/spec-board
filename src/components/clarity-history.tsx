@@ -10,14 +10,17 @@ import {
   Calendar,
   HelpCircle,
   CheckCircle2,
+  GitBranch,
+  ExternalLink,
 } from 'lucide-react';
 
 interface ClarityHistoryPanelProps {
   features: Feature[];
   totalClarifications: number;
+  onFeatureClick?: (feature: Feature) => void;
 }
 
-export function ClarityHistoryPanel({ features, totalClarifications }: ClarityHistoryPanelProps) {
+export function ClarityHistoryPanel({ features, totalClarifications, onFeatureClick }: ClarityHistoryPanelProps) {
   const [isExpanded, setIsExpanded] = useState(false);
   const [expandedFeatures, setExpandedFeatures] = useState<Set<string>>(new Set());
   const [expandedSessions, setExpandedSessions] = useState<Set<string>>(new Set());
@@ -93,22 +96,44 @@ export function ClarityHistoryPanel({ features, totalClarifications }: ClarityHi
           {featuresWithClarifications.map((feature) => (
             <div key={feature.id} className="border-b border-[var(--border)] last:border-b-0">
               {/* Feature Header */}
-              <button
-                onClick={() => toggleFeature(feature.id)}
+              <div
                 className="w-full flex items-center justify-between p-3 hover:bg-[var(--secondary)] transition-colors"
               >
-                <div className="flex items-center gap-2">
+                <button
+                  onClick={() => toggleFeature(feature.id)}
+                  className="flex items-center gap-2 flex-1 min-w-0 cursor-pointer"
+                  title={expandedFeatures.has(feature.id) ? "Collapse clarifications" : "Expand clarifications"}
+                >
                   {expandedFeatures.has(feature.id) ? (
-                    <ChevronDown className="w-4 h-4 text-[var(--muted-foreground)]" />
+                    <ChevronDown className="w-4 h-4 text-[var(--muted-foreground)] flex-shrink-0" />
                   ) : (
-                    <ChevronRight className="w-4 h-4 text-[var(--muted-foreground)]" />
+                    <ChevronRight className="w-4 h-4 text-[var(--muted-foreground)] flex-shrink-0" />
                   )}
-                  <span className="font-medium text-sm capitalize">{feature.name}</span>
+                  <div className="flex flex-col items-start min-w-0">
+                    <span className="font-medium text-sm capitalize truncate">
+                      {feature.name}
+                    </span>
+                    {feature.branch && (
+                      <span className="flex items-center gap-1 text-xs text-[var(--muted-foreground)]">
+                        <GitBranch className="w-3 h-3" />
+                        <span className="truncate">{feature.branch}</span>
+                      </span>
+                    )}
+                  </div>
+                </button>
+                <div className="flex items-center gap-3 flex-shrink-0">
+                  <span className="text-xs text-[var(--muted-foreground)]">
+                    {feature.totalClarifications} clarification{feature.totalClarifications !== 1 ? 's' : ''}
+                  </span>
+                  <button
+                    onClick={() => onFeatureClick?.(feature)}
+                    className="p-2 hover:bg-blue-500/20 hover:text-blue-400 rounded-lg transition-colors cursor-pointer"
+                    title="Open feature details"
+                  >
+                    <ExternalLink className="w-4 h-4" />
+                  </button>
                 </div>
-                <span className="text-xs text-[var(--muted-foreground)]">
-                  {feature.totalClarifications} clarification{feature.totalClarifications !== 1 ? 's' : ''}
-                </span>
-              </button>
+              </div>
 
               {/* Feature Sessions */}
               {expandedFeatures.has(feature.id) && (

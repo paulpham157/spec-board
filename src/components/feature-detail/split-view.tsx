@@ -15,6 +15,7 @@ interface SplitViewProps {
   leftSection: SectionId;
   rightSection: SectionId | null;
   feature: Feature;
+  hasConstitution: boolean;
   splitRatio: number;
   onRatioChange: (ratio: number) => void;
   onCloseRight: () => void;
@@ -26,6 +27,7 @@ export function SplitView({
   leftSection,
   rightSection,
   feature,
+  hasConstitution,
   splitRatio,
   onRatioChange,
   onCloseRight,
@@ -76,6 +78,7 @@ export function SplitView({
         <ContentPane
           sectionId={leftSection}
           feature={feature}
+          hasConstitution={hasConstitution}
           showCloseButton={false}
         />
       </div>
@@ -106,6 +109,7 @@ export function SplitView({
         <ContentPane
           sectionId={leftSection}
           feature={feature}
+          hasConstitution={hasConstitution}
           showCloseButton={false}
         />
       </div>
@@ -147,6 +151,7 @@ export function SplitView({
         <ContentPane
           sectionId={rightSection}
           feature={feature}
+          hasConstitution={hasConstitution}
           showCloseButton={true}
           onClose={onCloseRight}
         />

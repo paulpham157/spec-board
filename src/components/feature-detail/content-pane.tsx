@@ -13,27 +13,15 @@ import { ContractsViewer } from '@/components/contracts-viewer';
 import { ChecklistViewer } from '@/components/checklist-viewer';
 import { AnalysisViewer } from '@/components/analysis-viewer';
 import { TaskGroupList } from '@/components/task-group';
-import { FeatureClarity } from '@/components/clarity-history';
-import { PriorityBadge } from '@/components/priority-badge';
 import { Tooltip } from '@/components/tooltip';
-import { FileText, CheckCircle2, Circle, Zap, MessageCircle } from 'lucide-react';
+import { WorkflowDiagram } from './workflow-diagram';
+import { FileText, CheckCircle2, Circle, Zap } from 'lucide-react';
 import type { Task, TaskPhase } from '@/types';
-import {
-  PieChart,
-  Pie,
-  Cell,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts';
 
 interface ContentPaneProps {
   sectionId: SectionId;
   feature: Feature;
+  hasConstitution: boolean;
   onClose?: () => void;
   showCloseButton?: boolean;
   className?: string;
@@ -151,224 +139,12 @@ function PhaseProgress({ phase }: { phase: TaskPhase }) {
   );
 }
 
-// Chart colors
-const CHART_COLORS = {
-  completed: '#22c55e',  // green-500
-  remaining: '#3b82f6',  // blue-500
-  p1: '#ef4444',         // red-500
-  p2: '#f59e0b',         // amber-500
-  p3: '#22c55e',         // green-500
-};
-
-// Custom tooltip for charts
-function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: Array<{ value: number; name: string; fill: string }>; label?: string }) {
-  if (active && payload && payload.length) {
-    return (
-      <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg px-3 py-2 shadow-lg">
-        <p className="text-sm font-medium">{label || payload[0].name}</p>
-        <p className="text-xs text-[var(--muted-foreground)]">
-          {payload[0].value} tasks
-        </p>
-      </div>
-    );
-  }
-  return null;
-}
-
 // Overview content with charts
-function OverviewContent({ feature }: { feature: Feature }) {
-  const progressPercentage = feature.totalTasks > 0
-    ? Math.round((feature.completedTasks / feature.totalTasks) * 100)
-    : 0;
-
-  // Data for donut chart
-  const progressData = [
-    { name: 'Completed', value: feature.completedTasks, fill: CHART_COLORS.completed },
-    { name: 'Remaining', value: feature.totalTasks - feature.completedTasks, fill: CHART_COLORS.remaining },
-  ];
-
-  // Data for user story progress bar chart
-  const userStoryData = feature.taskGroups?.map(group => {
-    const story = feature.userStories.find(s => s.id === group.storyId);
-    return {
-      name: group.storyId || 'Other',
-      completed: group.completedCount,
-      remaining: group.totalCount - group.completedCount,
-      total: group.totalCount,
-      priority: story?.priority || 'P3',
-    };
-  }) || [];
-
+function OverviewContent({ feature, hasConstitution }: { feature: Feature; hasConstitution: boolean }) {
   return (
     <div className="space-y-6">
-      {/* Progress Overview - Two column layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        {/* Donut Chart Card */}
-        {feature.totalTasks > 0 && (
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
-            <h3 className="font-medium mb-4 text-sm uppercase tracking-wide text-[var(--muted-foreground)]">
-              Overall Progress
-            </h3>
-            <div className="flex items-center justify-center">
-              <div className="relative">
-                <ResponsiveContainer width={180} height={180}>
-                  <PieChart>
-                    <Pie
-                      data={progressData}
-                      cx="50%"
-                      cy="50%"
-                      innerRadius={55}
-                      outerRadius={80}
-                      paddingAngle={2}
-                      dataKey="value"
-                      strokeWidth={0}
-                    >
-                      {progressData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={entry.fill} />
-                      ))}
-                    </Pie>
-                    <RechartsTooltip content={<CustomTooltip />} />
-                  </PieChart>
-                </ResponsiveContainer>
-                {/* Center text */}
-                <div className="absolute inset-0 flex flex-col items-center justify-center">
-                  <span className="text-3xl font-bold">{progressPercentage}%</span>
-                  <span className="text-xs text-[var(--muted-foreground)]">Complete</span>
-                </div>
-              </div>
-            </div>
-            {/* Legend */}
-            <div className="flex justify-center gap-6 mt-4">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-green-500" />
-                <span className="text-sm">{feature.completedTasks} Done</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 rounded-full bg-blue-500" />
-                <span className="text-sm">{feature.totalTasks - feature.completedTasks} Remaining</span>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Stats Cards */}
-        <div className="space-y-4">
-          {/* User Stories Count */}
-          {feature.userStories.length > 0 && (
-            <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-[var(--muted-foreground)]">User Stories</p>
-                  <p className="text-2xl font-bold">{feature.userStories.length}</p>
-                </div>
-                <div className="flex gap-1">
-                  {feature.userStories.filter(s => s.priority === 'P1').length > 0 && (
-                    <span className="text-xs bg-red-500/20 text-red-400 px-2 py-1 rounded">
-                      {feature.userStories.filter(s => s.priority === 'P1').length} P1
-                    </span>
-                  )}
-                  {feature.userStories.filter(s => s.priority === 'P2').length > 0 && (
-                    <span className="text-xs bg-amber-500/20 text-amber-400 px-2 py-1 rounded">
-                      {feature.userStories.filter(s => s.priority === 'P2').length} P2
-                    </span>
-                  )}
-                  {feature.userStories.filter(s => s.priority === 'P3').length > 0 && (
-                    <span className="text-xs bg-green-500/20 text-green-400 px-2 py-1 rounded">
-                      {feature.userStories.filter(s => s.priority === 'P3').length} P3
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Clarifications Count */}
-          {feature.totalClarifications > 0 && (
-            <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-[var(--muted-foreground)]">Clarifications</p>
-                  <p className="text-2xl font-bold">{feature.totalClarifications}</p>
-                </div>
-                <MessageCircle className="w-8 h-8 text-[var(--muted-foreground)] opacity-50" />
-              </div>
-              <p className="text-xs text-[var(--muted-foreground)] mt-2">
-                {feature.clarificationSessions.length} session{feature.clarificationSessions.length !== 1 ? 's' : ''}
-              </p>
-            </div>
-          )}
-
-          {/* Files Status */}
-          <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
-            <p className="text-sm text-[var(--muted-foreground)] mb-3">Files</p>
-            <div className="flex flex-wrap gap-2">
-              <span className={cn(
-                'text-xs px-2 py-1 rounded',
-                feature.hasSpec ? 'bg-green-500/20 text-green-400' : 'bg-[var(--secondary)] text-[var(--muted-foreground)]'
-              )}>
-                spec.md {feature.hasSpec ? '✓' : '○'}
-              </span>
-              <span className={cn(
-                'text-xs px-2 py-1 rounded',
-                feature.hasPlan ? 'bg-green-500/20 text-green-400' : 'bg-[var(--secondary)] text-[var(--muted-foreground)]'
-              )}>
-                plan.md {feature.hasPlan ? '✓' : '○'}
-              </span>
-              <span className={cn(
-                'text-xs px-2 py-1 rounded',
-                feature.hasTasks ? 'bg-green-500/20 text-green-400' : 'bg-[var(--secondary)] text-[var(--muted-foreground)]'
-              )}>
-                tasks.md {feature.hasTasks ? '✓' : '○'}
-              </span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* User Story Progress Bar Chart */}
-      {userStoryData.length > 0 && (
-        <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
-          <h3 className="font-medium mb-4 text-sm uppercase tracking-wide text-[var(--muted-foreground)]">
-            Progress by User Story
-          </h3>
-          <ResponsiveContainer width="100%" height={Math.max(200, userStoryData.length * 50)}>
-            <BarChart
-              data={userStoryData}
-              layout="vertical"
-              margin={{ top: 5, right: 30, left: 50, bottom: 5 }}
-            >
-              <XAxis type="number" stroke="var(--muted-foreground)" fontSize={12} />
-              <YAxis
-                type="category"
-                dataKey="name"
-                stroke="var(--muted-foreground)"
-                fontSize={12}
-                width={45}
-              />
-              <RechartsTooltip
-                content={({ active, payload, label }) => {
-                  if (active && payload && payload.length) {
-                    const data = userStoryData.find(d => d.name === label);
-                    return (
-                      <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg px-3 py-2 shadow-lg">
-                        <p className="text-sm font-medium">{label}</p>
-                        <p className="text-xs text-green-400">Completed: {data?.completed}</p>
-                        <p className="text-xs text-blue-400">Remaining: {data?.remaining}</p>
-                        <p className="text-xs text-[var(--muted-foreground)]">Total: {data?.total}</p>
-                      </div>
-                    );
-                  }
-                  return null;
-                }}
-              />
-              <Legend />
-              <Bar dataKey="completed" stackId="a" fill={CHART_COLORS.completed} name="Completed" radius={[0, 0, 0, 0]} />
-              <Bar dataKey="remaining" stackId="a" fill={CHART_COLORS.remaining} name="Remaining" radius={[0, 4, 4, 0]} />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      )}
-
+      {/* Spec-Kit Workflow Diagram */}
+      <WorkflowDiagram feature={feature} hasConstitution={hasConstitution} />
     </div>
   );
 }
@@ -412,6 +188,7 @@ function TasksContent({ feature }: { feature: Feature }) {
 export function ContentPane({
   sectionId,
   feature,
+  hasConstitution,
   onClose,
   showCloseButton = false,
   className,
@@ -468,7 +245,7 @@ export function ContentPane({
 
       {/* Pane content */}
       <div className="flex-1 overflow-auto p-4">
-        {sectionId === 'overview' && <OverviewContent feature={feature} />}
+        {sectionId === 'overview' && <OverviewContent feature={feature} hasConstitution={hasConstitution} />}
         {sectionId === 'spec' && (
           <SpecViewer content={feature.specContent} filePath={filePath} />
         )}
