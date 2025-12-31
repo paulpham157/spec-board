@@ -18,6 +18,7 @@ import type {
   SpecKitFile,
   SpecKitFileType,
   FeatureAnalysis,
+  SyncImpactReport,
   AnalysisData
 } from '@/types';
 
@@ -461,8 +462,104 @@ export function parseAnalysis(featurePath: string): FeatureAnalysis {
 }
 
 /**
+ * Parse Sync Impact Report from HTML comment in constitution.md
+ * Format:
+ * <!--
+ * Sync Impact Report
+ * ==================
+ * Version change: 0.0.0 → 1.0.0 (Initial ratification)
+ * Modified principles: N/A
+ * Added sections:
+ *   - Core Principles (5 principles)
+ *   - Quality Standards
+ * Removed sections: N/A
+ * Templates requiring updates:
+ *   - .specify/templates/plan-template.md ✅ (no changes needed)
+ * Follow-up TODOs: None
+ * -->
+ */
+function parseSyncImpactReport(content: string): SyncImpactReport | undefined {
+  // Extract HTML comment containing "Sync Impact Report"
+  const commentMatch = content.match(/<!--\s*\n?\s*Sync Impact Report[\s\S]*?-->/i);
+  if (!commentMatch) return undefined;
+
+  const commentContent = commentMatch[0];
+
+  // Extract version change
+  const versionChangeMatch = commentContent.match(/Version change:\s*(.+)/i);
+  const versionChange = versionChangeMatch ? versionChangeMatch[1].trim() : undefined;
+
+  // Extract modified principles
+  const modifiedPrinciplesMatch = commentContent.match(/Modified principles:\s*(.+)/i);
+  const modifiedPrinciples = modifiedPrinciplesMatch ? modifiedPrinciplesMatch[1].trim() : undefined;
+
+  // Extract added sections (multi-line list)
+  const addedSections: string[] = [];
+  const addedSectionsMatch = commentContent.match(/Added sections:\s*\n([\s\S]*?)(?=\nRemoved sections:|$)/i);
+  if (addedSectionsMatch) {
+    const lines = addedSectionsMatch[1].split('\n');
+    for (const line of lines) {
+      const itemMatch = line.match(/^\s*-\s*(.+)/);
+      if (itemMatch) {
+        addedSections.push(itemMatch[1].trim());
+      }
+    }
+  }
+
+  // Extract removed sections
+  const removedSections: string[] = [];
+  const removedSectionsMatch = commentContent.match(/Removed sections:\s*(.+)/i);
+  if (removedSectionsMatch) {
+    const value = removedSectionsMatch[1].trim();
+    if (value !== 'N/A' && value !== 'None') {
+      // Check if it's a multi-line list
+      const multiLineMatch = commentContent.match(/Removed sections:\s*\n([\s\S]*?)(?=\nTemplates requiring updates:|$)/i);
+      if (multiLineMatch) {
+        const lines = multiLineMatch[1].split('\n');
+        for (const line of lines) {
+          const itemMatch = line.match(/^\s*-\s*(.+)/);
+          if (itemMatch) {
+            removedSections.push(itemMatch[1].trim());
+          }
+        }
+      }
+    }
+  }
+
+  // Extract templates status (multi-line list)
+  const templatesStatus: { template: string; status: string }[] = [];
+  const templatesMatch = commentContent.match(/Templates requiring updates:\s*\n([\s\S]*?)(?=\nFollow-up TODOs:|$)/i);
+  if (templatesMatch) {
+    const lines = templatesMatch[1].split('\n');
+    for (const line of lines) {
+      // Match: - .specify/templates/plan-template.md ✅ (no changes needed)
+      const itemMatch = line.match(/^\s*-\s*([^\s]+)\s*(.*)/);
+      if (itemMatch) {
+        templatesStatus.push({
+          template: itemMatch[1].trim(),
+          status: itemMatch[2].trim(),
+        });
+      }
+    }
+  }
+
+  // Extract follow-up TODOs
+  const followUpMatch = commentContent.match(/Follow-up TODOs:\s*(.+)/i);
+  const followUpTodos = followUpMatch ? followUpMatch[1].trim() : undefined;
+
+  return {
+    versionChange,
+    modifiedPrinciples,
+    addedSections,
+    removedSections,
+    templatesStatus,
+    followUpTodos,
+  };
+}
+
+/**
  * Parse constitution.md file
- * Extracts principles, sections, and version metadata
+ * Extracts principles, sections, version metadata, and sync impact report
  */
 export function parseConstitution(content: string): Constitution {
   const principles: ConstitutionPrinciple[] = [];
@@ -477,6 +574,9 @@ export function parseConstitution(content: string): Constitution {
   const version = versionMatch ? versionMatch[1].trim() : undefined;
   const ratifiedDate = ratifiedMatch ? ratifiedMatch[1].trim() : undefined;
   const lastAmendedDate = amendedMatch ? amendedMatch[1].trim() : undefined;
+
+  // Extract Sync Impact Report from HTML comment
+  const syncImpactReport = parseSyncImpactReport(content);
 
   // Find Core Principles section and extract principles
   const principlesMatch = content.match(/## Core Principles\s*\n([\s\S]*?)(?=\n## [^#]|$)/i);
@@ -520,6 +620,7 @@ export function parseConstitution(content: string): Constitution {
     version,
     ratifiedDate,
     lastAmendedDate,
+    syncImpactReport,
   };
 }
 

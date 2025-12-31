@@ -12,11 +12,16 @@ import {
   Shield,
   Workflow,
   Gavel,
-  ListChecks
+  ListChecks,
+  GitCompare,
+  Plus,
+  Minus,
+  FileCheck,
+  AlertCircle
 } from 'lucide-react';
 import { MarkdownRenderer } from './markdown-renderer';
 import { cn } from '@/lib/utils';
-import type { Constitution, ConstitutionPrinciple, ConstitutionSection } from '@/types';
+import type { Constitution, ConstitutionPrinciple, ConstitutionSection, SyncImpactReport } from '@/types';
 
 interface ConstitutionViewerProps {
   constitution: Constitution | null;
@@ -31,6 +36,131 @@ function getSectionIcon(name: string) {
   if (nameLower.includes('governance')) return Gavel;
   if (nameLower.includes('security')) return Shield;
   return BookOpen;
+}
+
+// Sync Impact Report Card component
+function SyncImpactReportCard({ report }: { report: SyncImpactReport }) {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const hasContent = report.versionChange ||
+    report.addedSections.length > 0 ||
+    report.removedSections.length > 0 ||
+    report.templatesStatus.length > 0;
+
+  if (!hasContent) return null;
+
+  return (
+    <div className="bg-[var(--card)] border border-amber-500/30 rounded-xl overflow-hidden">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center gap-3 p-4 hover:bg-amber-500/10 transition-colors text-left"
+      >
+        {isExpanded ? (
+          <ChevronDown className="w-4 h-4 text-amber-400 flex-shrink-0" />
+        ) : (
+          <ChevronRight className="w-4 h-4 text-amber-400 flex-shrink-0" />
+        )}
+        <GitCompare className="w-4 h-4 text-amber-400 flex-shrink-0" />
+        <span className="font-medium flex-1 text-amber-400">Sync Impact Report</span>
+        {report.versionChange && (
+          <code className="text-xs bg-amber-500/20 text-amber-400 px-2 py-0.5 rounded">
+            {report.versionChange.split(' ')[0]} → {report.versionChange.split('→')[1]?.trim().split(' ')[0] || ''}
+          </code>
+        )}
+      </button>
+
+      {isExpanded && (
+        <div className="px-4 pb-4 pl-11 space-y-4">
+          {/* Version Change */}
+          {report.versionChange && (
+            <div>
+              <div className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-1">
+                Version Change
+              </div>
+              <p className="text-sm text-[var(--foreground)]">{report.versionChange}</p>
+            </div>
+          )}
+
+          {/* Modified Principles */}
+          {report.modifiedPrinciples && report.modifiedPrinciples !== 'N/A' && (
+            <div>
+              <div className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-1">
+                Modified Principles
+              </div>
+              <p className="text-sm text-[var(--foreground)]">{report.modifiedPrinciples}</p>
+            </div>
+          )}
+
+          {/* Added Sections */}
+          {report.addedSections.length > 0 && (
+            <div>
+              <div className="text-xs font-medium text-green-400 uppercase tracking-wide mb-2 flex items-center gap-1">
+                <Plus className="w-3 h-3" />
+                Added Sections ({report.addedSections.length})
+              </div>
+              <ul className="space-y-1">
+                {report.addedSections.map((section, idx) => (
+                  <li key={idx} className="text-sm text-[var(--foreground)] flex items-center gap-2">
+                    <span className="text-green-400">+</span>
+                    {section}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Removed Sections */}
+          {report.removedSections.length > 0 && (
+            <div>
+              <div className="text-xs font-medium text-red-400 uppercase tracking-wide mb-2 flex items-center gap-1">
+                <Minus className="w-3 h-3" />
+                Removed Sections ({report.removedSections.length})
+              </div>
+              <ul className="space-y-1">
+                {report.removedSections.map((section, idx) => (
+                  <li key={idx} className="text-sm text-[var(--foreground)] flex items-center gap-2">
+                    <span className="text-red-400">-</span>
+                    {section}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Templates Status */}
+          {report.templatesStatus.length > 0 && (
+            <div>
+              <div className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-2 flex items-center gap-1">
+                <FileCheck className="w-3 h-3" />
+                Templates Status ({report.templatesStatus.length})
+              </div>
+              <ul className="space-y-1">
+                {report.templatesStatus.map((item, idx) => (
+                  <li key={idx} className="text-sm flex items-start gap-2">
+                    <code className="text-xs bg-[var(--secondary)] px-1.5 py-0.5 rounded font-mono">
+                      {item.template.split('/').pop()}
+                    </code>
+                    <span className="text-[var(--muted-foreground)]">{item.status}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          {/* Follow-up TODOs */}
+          {report.followUpTodos && report.followUpTodos !== 'None' && (
+            <div>
+              <div className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-1 flex items-center gap-1">
+                <AlertCircle className="w-3 h-3" />
+                Follow-up TODOs
+              </div>
+              <p className="text-sm text-[var(--foreground)]">{report.followUpTodos}</p>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
+  );
 }
 
 // Principle Card component
@@ -182,6 +312,11 @@ export function ConstitutionViewer({ constitution, className }: ConstitutionView
               )}
             </div>
           </div>
+
+          {/* Sync Impact Report */}
+          {constitution.syncImpactReport && (
+            <SyncImpactReportCard report={constitution.syncImpactReport} />
+          )}
 
           {/* Core Principles */}
           {constitution.principles.length > 0 && (

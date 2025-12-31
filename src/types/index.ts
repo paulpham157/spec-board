@@ -88,6 +88,16 @@ export interface ConstitutionSection {
   content: string;
 }
 
+// Sync Impact Report from constitution.md HTML comment
+export interface SyncImpactReport {
+  versionChange?: string;        // e.g., "0.0.0 → 1.0.0 (Initial ratification)"
+  modifiedPrinciples?: string;
+  addedSections: string[];
+  removedSections: string[];
+  templatesStatus: { template: string; status: string }[];
+  followUpTodos?: string;
+}
+
 export interface Constitution {
   rawContent: string;
   principles: ConstitutionPrinciple[];
@@ -95,6 +105,7 @@ export interface Constitution {
   version?: string;
   ratifiedDate?: string;
   lastAmendedDate?: string;
+  syncImpactReport?: SyncImpactReport;
 }
 
 export interface Task {
