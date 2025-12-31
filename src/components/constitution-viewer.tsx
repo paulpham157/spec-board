@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 import { MarkdownRenderer } from './markdown-renderer';
 import { cn } from '@/lib/utils';
-import type { Constitution, ConstitutionPrinciple, ConstitutionSection, SyncImpactReport } from '@/types';
+import type { Constitution, ConstitutionPrinciple, ConstitutionSection, ConstitutionSubsection, SyncImpactReport } from '@/types';
 
 interface ConstitutionViewerProps {
   constitution: Constitution | null;
@@ -191,6 +191,33 @@ function PrincipleCard({ principle, index }: { principle: ConstitutionPrinciple;
   );
 }
 
+// Subsection Card component (for items under Quality Standards, Development Workflow, etc.)
+function SubsectionCard({ subsection, index }: { subsection: ConstitutionSubsection; index: number }) {
+  const [isExpanded, setIsExpanded] = useState(index === 0);
+
+  return (
+    <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl overflow-hidden">
+      <button
+        onClick={() => setIsExpanded(!isExpanded)}
+        className="w-full flex items-center gap-3 p-4 hover:bg-[var(--secondary)]/30 transition-colors text-left"
+      >
+        {isExpanded ? (
+          <ChevronDown className="w-4 h-4 text-[var(--muted-foreground)] flex-shrink-0" />
+        ) : (
+          <ChevronRight className="w-4 h-4 text-[var(--muted-foreground)] flex-shrink-0" />
+        )}
+        <span className="font-medium flex-1">{subsection.name}</span>
+      </button>
+
+      {isExpanded && (
+        <div className="px-4 pb-4 pl-11">
+          <MarkdownRenderer content={subsection.content} />
+        </div>
+      )}
+    </div>
+  );
+}
+
 // Section Card component
 function SectionCard({ section }: { section: ConstitutionSection }) {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -329,20 +356,31 @@ export function ConstitutionViewer({ constitution, className }: ConstitutionView
             </div>
           )}
 
-          {/* Guidelines */}
-          {constitution.sections.length > 0 && (
-            <div>
-              <h2 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2">
-                <BookOpen className="w-4 h-4" />
-                Guidelines ({constitution.sections.length})
-              </h2>
-              <div className="space-y-3">
-                {constitution.sections.map((section, index) => (
-                  <SectionCard key={index} section={section} />
-                ))}
+          {/* Other Sections (Quality Standards, Development Workflow, Governance, etc.) */}
+          {constitution.sections.map((section, sectionIndex) => {
+            const Icon = getSectionIcon(section.name);
+            const hasSubsections = section.subsections && section.subsections.length > 0;
+
+            return (
+              <div key={sectionIndex}>
+                <h2 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2">
+                  <Icon className="w-4 h-4" />
+                  {section.name} {hasSubsections && `(${section.subsections.length})`}
+                </h2>
+                {hasSubsections ? (
+                  <div className="space-y-3">
+                    {section.subsections.map((subsection, subIndex) => (
+                      <SubsectionCard key={subIndex} subsection={subsection} index={subIndex} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="bg-[var(--card)] border border-[var(--border)] rounded-xl p-4">
+                    <MarkdownRenderer content={section.content} />
+                  </div>
+                )}
               </div>
-            </div>
-          )}
+            );
+          })}
         </div>
       )}
     </div>

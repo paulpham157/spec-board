@@ -10,6 +10,7 @@ import type {
   Constitution,
   ConstitutionPrinciple,
   ConstitutionSection,
+  ConstitutionSubsection,
   ClarificationSession,
   Clarification,
   UserStory,
@@ -610,8 +611,30 @@ export function parseConstitution(content: string): Constitution {
     const sectionName = sectionMatch[1].trim();
     // Skip Core Principles (already parsed) and template placeholders
     if (sectionName !== 'Core Principles' && !sectionName.startsWith('[')) {
+      const sectionContent = sectionMatch[2];
+
+      // Extract subsections (### headings) within this section
+      const subsections: ConstitutionSubsection[] = [];
+      const subsectionRegex = /### ([^\n]+)\s*\n([\s\S]*?)(?=\n### |\n## |$)/g;
+      let subsectionMatch;
+
+      while ((subsectionMatch = subsectionRegex.exec(sectionContent)) !== null) {
+        const subsectionName = subsectionMatch[1].trim();
+        // Skip template placeholders
+        if (!subsectionName.startsWith('[')) {
+          const cleanedSubContent = subsectionMatch[2]
+            .trim()
+            .replace(/<!--[\s\S]*?-->/g, '')
+            .trim();
+          subsections.push({
+            name: subsectionName,
+            content: cleanedSubContent,
+          });
+        }
+      }
+
       // Strip HTML comments and version metadata line from content
-      const cleanedContent = sectionMatch[2]
+      const cleanedContent = sectionContent
         .trim()
         .replace(/<!--[\s\S]*?-->/g, '')
         .replace(/^\*\*Version\*\*:.+$/gm, '')
@@ -619,6 +642,7 @@ export function parseConstitution(content: string): Constitution {
       sections.push({
         name: sectionName,
         content: cleanedContent,
+        subsections,
       });
     }
   }

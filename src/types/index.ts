@@ -83,9 +83,15 @@ export interface ConstitutionPrinciple {
   description: string;
 }
 
+export interface ConstitutionSubsection {
+  name: string;
+  content: string;
+}
+
 export interface ConstitutionSection {
   name: string;
   content: string;
+  subsections: ConstitutionSubsection[];
 }
 
 // Sync Impact Report from constitution.md HTML comment
