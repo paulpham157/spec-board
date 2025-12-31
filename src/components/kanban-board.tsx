@@ -4,7 +4,6 @@ import { KeyboardEvent } from 'react';
 import { cn, getFeatureKanbanColumn, getKanbanColumnLabel, type KanbanColumn } from '@/lib/utils';
 import type { Feature } from '@/types';
 import { GitBranch } from 'lucide-react';
-import { PriorityBadge } from '@/components/priority-badge';
 import { Tooltip } from '@/components/tooltip';
 import { announce } from '@/lib/accessibility';
 
@@ -21,18 +20,9 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
     ? Math.round((feature.completedTasks / feature.totalTasks) * 100)
     : 0;
 
-  // Get highest priority from user stories
-  const highestPriority = feature.userStories.length > 0
-    ? feature.userStories.reduce((highest, story) => {
-        const priorityOrder = { P1: 1, P2: 2, P3: 3 };
-        return priorityOrder[story.priority] < priorityOrder[highest] ? story.priority : highest;
-      }, feature.userStories[0].priority)
-    : null;
-
   // Build accessible label
   const ariaLabel = [
     feature.name,
-    highestPriority ? `Priority ${highestPriority.replace('P', '')}` : null,
     feature.totalTasks > 0 ? `${feature.completedTasks} of ${feature.totalTasks} tasks complete` : null,
   ].filter(Boolean).join(', ');
 
@@ -60,9 +50,8 @@ function FeatureCard({ feature, onClick, onKeyDown }: FeatureCardProps) {
           'focus-ring'
         )}
       >
-      {/* Title with priority badge */}
+      {/* Title */}
       <div className="flex items-center gap-2 mb-2">
-        {highestPriority && <PriorityBadge priority={highestPriority} />}
         <h4 className="font-medium text-sm text-[var(--foreground)] capitalize truncate">
           {feature.name}
         </h4>
