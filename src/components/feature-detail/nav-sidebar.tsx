@@ -438,15 +438,6 @@ export function NavSidebar({
   const steps = useMemo(() => buildWorkflowSteps(feature, hasConstitution), [feature, hasConstitution]);
   const groupedSteps = useMemo(() => groupStepsByPhase(steps), [steps]);
 
-  // Get highest priority from user stories for display
-  type Priority = 'P1' | 'P2' | 'P3';
-  const highestPriority: Priority | null = feature.userStories.length > 0
-    ? feature.userStories.reduce<Priority>((highest, story) => {
-        const priorityOrder: Record<Priority, number> = { P1: 1, P2: 2, P3: 3 };
-        return priorityOrder[story.priority] < priorityOrder[highest] ? story.priority : highest;
-      }, feature.userStories[0].priority)
-    : null;
-
   const nextTask = getNextTask(feature);
 
   // Expanded state - default: expand current step, collapse completed
@@ -488,20 +479,10 @@ export function NavSidebar({
             <div key={phase} className="mb-3">
               {/* Phase header */}
               <div className={cn(
-                'text-[10px] font-bold tracking-wider mb-1 px-2 flex items-center gap-2',
+                'text-[10px] font-bold tracking-wider mb-1 px-2',
                 config.color
               )}>
-                <span>{config.label}</span>
-                {phase === 'overview' && highestPriority && (
-                  <span className={cn(
-                    'text-[9px] px-1.5 py-0.5 rounded font-bold',
-                    highestPriority === 'P1' && 'bg-red-500/20 text-red-400',
-                    highestPriority === 'P2' && 'bg-yellow-500/20 text-yellow-400',
-                    highestPriority === 'P3' && 'bg-green-500/20 text-green-400'
-                  )}>
-                    [{highestPriority}]
-                  </span>
-                )}
+                {config.label}
               </div>
 
               {/* Phase steps */}
