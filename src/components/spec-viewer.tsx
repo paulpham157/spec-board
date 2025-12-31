@@ -453,6 +453,15 @@ function parseAssumptions(section: string): string[] {
   return assumptions;
 }
 
+// Format User Story description with line breaks for "As a / I want / so that" structure
+function formatUserStoryDescription(description: string): string {
+  // Add line break before "I want" and "so that"
+  return description
+    .replace(/,?\s*(I want\s)/i, ',\n$1')
+    .replace(/,?\s*(so that\s)/i,'\nso that ')
+    .replace(/,?\s*(and mark\s)/i, ',\nand mark ');
+}
+
 // Priority badge component
 function PriorityBadge({ priority }: { priority: 'P1' | 'P2' | 'P3' }) {
   const colors = {
@@ -524,11 +533,11 @@ function UserStoryCard({ story }: { story: UserStory }) {
       {/* Story Content */}
       {isExpanded && (
         <div className="px-4 pb-4 space-y-4">
-          {/* Description */}
+          {/* Description - formatted with line breaks for As a/I want/so that */}
           {story.description && (
             <div className="pl-7">
-              <p className="text-sm text-[var(--muted-foreground)] italic">
-                "{story.description}"
+              <p className="text-sm text-[var(--muted-foreground)] italic whitespace-pre-line">
+                "{formatUserStoryDescription(story.description)}"
               </p>
             </div>
           )}
