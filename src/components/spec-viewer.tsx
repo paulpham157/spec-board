@@ -4,7 +4,8 @@ import { useState, useMemo } from 'react';
 import {
   FileText,
   GitBranch, Calendar, FileCheck, MessageSquare,
-  Target, CheckCircle2, ChevronDown, ChevronRight
+  Target, CheckCircle2, ChevronDown, ChevronRight,
+  AlertTriangle, Database, ListChecks, Lightbulb, HelpCircle
 } from 'lucide-react';
 import { MarkdownRenderer } from './markdown-renderer';
 import { cn } from '@/lib/utils';
@@ -39,146 +40,417 @@ interface UserStory {
   acceptanceScenarios: AcceptanceScenario[];
 }
 
+interface EdgeCase {
+  question: string;
+  answer: string;
+}
+
+interface Requirement {
+  id: string;
+  text: string;
+}
+
+interface RequirementGroup {
+  category: string;
+  items: Requirement[];
+}
+
+interface Entity {
+  name: string;
+  description: string;
+  properties: string[];
+}
+
+interface Clarification {
+  session?: string;
+  question: string;
+  answer: string;
+}
+
 interface ParsedSpec {
   metadata: SpecMetadata;
   userStories: UserStory[];
-  clarifications: { question: string; answer: string }[];
+  edgeCases: EdgeCase[];
+  requirements: RequirementGroup[];
+  entities: Entity[];
+  successCriteria: Requirement[];
+  clarifications: Clarification[];
+  assumptions: string[];
   otherContent: string;
 }
 
 // Parse the spec content
 function parseSpecContent(content: string): ParsedSpec {
+  const result: ParsedSpec = {
+    metadata: { title: '' },
+    userStories: [],
+    edgeCases: [],
+    requirements: [],
+    entities: [],
+    successCriteria: [],
+    clarifications: [],
+    assumptions: [],
+    otherContent: ''
+  };
+
+  // Split content into major sections by ## headers
+  const sections = splitIntoSections(content);
+
+  // Parse metadata from header
+  result.metadata = parseMetadata(sections.header || '');
+
+  // Parse each section type
+  if (sections.userScenarios) {
+    result.userStories = parseUserStories(sections.userScenarios);
+  }
+  if (sections.edgeCases) {
+    result.edgeCases = parseEdgeCases(sections.edgeCases);
+  }
+  if (sections.requirements) {
+    result.requirements = parseRequirements(sections.requirements);
+  }
+  if (sections.keyEntities) {
+    result.entities = parseEntities(sections.keyEntities);
+  }
+  if (sections.successCriteria) {
+    result.successCriteria = parseSuccessCriteria(sections.successCriteria);
+  }
+  if (sections.clarifications) {
+    result.clarifications = parseClarifications(sections.clarifications);
+  }
+  if (sections.assumptions) {
+    result.assumptions = parseAssumptions(sections.assumptions);
+  }
+
+  return result;
+}
+
+// Split content into sections by ## headers
+function splitIntoSections(content: string): Record<string, string> {
+  const sections: Record<string, string> = {};
   const lines = content.split('\n');
-  const metadata: SpecMetadata = { title: '' };
-  const userStories: UserStory[] = [];
-  const clarifications: { question: string; answer: string }[] = [];
-  let otherContent = '';
 
-  let i = 0;
+  let currentSection = 'header';
+  let currentContent: string[] = [];
 
-  // Parse title
-  if (lines[0]?.startsWith('Feature Specification:')) {
-    metadata.title = lines[0].replace('Feature Specification:', '').trim();
-    i = 1;
-  }
-
-  // Parse metadata line
-  while (i < lines.length) {
-    const line = lines[i];
-    if (line.startsWith('**Feature Branch**:')) {
-      // Parse metadata from this line - handle both with and without backticks
-      // Format: **Feature Branch**: `branch` **Created**: date **Status**: status **Input**: ...
-      // Or: **Feature Branch**: branch **Created**: date **Status**: status **Input**: ...
-      const metaMatch = line.match(/\*\*Feature Branch\*\*:\s*`?([^`\s]+)`?\s*\*\*Created\*\*:\s*(\S+)\s*\*\*Status\*\*:\s*(\S+)\s*\*\*Input\*\*:\s*(.+)/);
-      if (metaMatch) {
-        metadata.branch = metaMatch[1];
-        metadata.created = metaMatch[2];
-        metadata.status = metaMatch[3];
-        metadata.input = metaMatch[4];
+  for (const line of lines) {
+    // Check for ## section headers
+    if (line.startsWith('## ') || line.match(/^[A-Z][a-z]+ [A-Z]/)) {
+      // Save previous section
+      if (currentContent.length > 0) {
+        sections[currentSection] = currentContent.join('\n');
       }
-      i++;
-      break;
+
+      // Determine new section type
+      const headerLower = line.toLowerCase();
+      if (headerLower.includes('user scenario') || headerLower.includes('user stories')) {
+        currentSection = 'userScenarios';
+      } else if (headerLower.includes('edge case')) {
+        currentSection = 'edgeCases';
+      } else if (headerLower.includes('requirement') && !headerLower.includes('non-functional')) {
+        currentSection = 'requirements';
+      } else if (headerLower.includes('key entit') || headerLower.includes('entities')) {
+        currentSection = 'keyEntities';
+      } else if (headerLower.includes('success criteria')) {
+        currentSection = 'successCriteria';
+      } else if (headerLower.includes('clarification')) {
+        currentSection = 'clarifications';
+      } else if (headerLower.includes('assumption')) {
+        currentSection = 'assumptions';
+      }
+
+      currentContent = [line];
+    } else {
+      currentContent.push(line);
     }
-    i++;
   }
 
-  // Skip to User Scenarios section
-  while (i < lines.length && !lines[i].includes('User Scenarios')) {
-    i++;
+  // Save last section
+  if (currentContent.length > 0) {
+    sections[currentSection] = currentContent.join('\n');
   }
-  i++; // Skip the header line
 
-  // Parse User Stories
+  return sections;
+}
+
+// Parse metadata from header section
+function parseMetadata(header: string): SpecMetadata {
+  const metadata: SpecMetadata = { title: '' };
+  const lines = header.split('\n');
+
+  for (const line of lines) {
+    if (line.startsWith('Feature Specification:')) {
+      metadata.title = line.replace('Feature Specification:', '').trim();
+    }
+    // Parse metadata line with Feature Branch, Created, Status, Input
+    const metaMatch = line.match(/Feature Branch:\s*`?([^`\s]+)`?/i);
+    if (metaMatch) {
+      metadata.branch = metaMatch[1];
+    }
+    const createdMatch = line.match(/Created:\s*(\S+)/i);
+    if (createdMatch) {
+      metadata.created = createdMatch[1];
+    }
+    const statusMatch = line.match(/Status:\s*(\S+)/i);
+    if (statusMatch) {
+      metadata.status = statusMatch[1];
+    }
+    const inputMatch = line.match(/Input:\s*(.+)/i);
+    if (inputMatch) {
+      metadata.input = inputMatch[1];
+    }
+  }
+
+  return metadata;
+}
+
+// Parse User Stories section
+function parseUserStories(section: string): UserStory[] {
+  const stories: UserStory[] = [];
+  const lines = section.split('\n');
+
   let currentStory: UserStory | null = null;
   let inAcceptanceScenarios = false;
-  let currentScenario: Partial<AcceptanceScenario> = {};
 
-  while (i < lines.length) {
+  for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
 
-    // Check for clarifications section
-    if (line.includes('Clarifications') || line.includes('## Q&A')) {
-      break;
-    }
-
-    // New User Story
-    const storyMatch = line.match(/^User Story (\d+) - (.+) \(Priority: (P[123])\)/);
+    // New User Story - match various formats
+    const storyMatch = line.match(/^(?:###?\s*)?User Story (\d+)\s*[-–]\s*(.+?)\s*\(Priority:\s*(P[123])\)/i);
     if (storyMatch) {
       if (currentStory) {
-        userStories.push(currentStory);
+        stories.push(currentStory);
       }
       currentStory = {
         id: `US${storyMatch[1]}`,
-        title: storyMatch[2],
+        title: storyMatch[2].trim(),
         priority: storyMatch[3] as 'P1' | 'P2' | 'P3',
         description: '',
         acceptanceScenarios: []
       };
       inAcceptanceScenarios = false;
-      i++;
       continue;
     }
 
     if (currentStory) {
-      // Description line (starts with "As a user...")
-      if (line.startsWith('As a user,') || line.startsWith('As a ')) {
+      // Description line (starts with "As a user..." or "As a...")
+      if (line.match(/^As a\s/i)) {
         currentStory.description = line;
       }
       // Why this priority
-      else if (line.startsWith('**Why this priority**:')) {
-        currentStory.whyPriority = line.replace('**Why this priority**:', '').trim();
+      else if (line.match(/^(?:\*\*)?Why this priority(?:\*\*)?:/i)) {
+        currentStory.whyPriority = line.replace(/^(?:\*\*)?Why this priority(?:\*\*)?:\s*/i, '').trim();
       }
       // Independent Test
-      else if (line.startsWith('**Independent Test**:')) {
-        currentStory.independentTest = line.replace('**Independent Test**:', '').trim();
+      else if (line.match(/^(?:\*\*)?Independent Test(?:\*\*)?:/i)) {
+        currentStory.independentTest = line.replace(/^(?:\*\*)?Independent Test(?:\*\*)?:\s*/i, '').trim();
       }
       // Acceptance Scenarios header
-      else if (line.includes('**Acceptance Scenarios**:')) {
+      else if (line.match(/Acceptance Scenarios/i)) {
         inAcceptanceScenarios = true;
       }
-      // Given/When/Then
-      else if (inAcceptanceScenarios) {
-        if (line.startsWith('**Given**')) {
-          if (currentScenario.given && currentScenario.when && currentScenario.then) {
-            currentStory.acceptanceScenarios.push(currentScenario as AcceptanceScenario);
-          }
-          const parts = line.match(/\*\*Given\*\*\s*(.+?),\s*\*\*When\*\*\s*(.+?),\s*\*\*Then\*\*\s*(.+)/);
-          if (parts) {
-            currentScenario = {
-              given: parts[1],
-              when: parts[2],
-              then: parts[3]
-            };
-            currentStory.acceptanceScenarios.push(currentScenario as AcceptanceScenario);
-            currentScenario = {};
-          }
+      // Given/When/Then scenarios
+      else if (inAcceptanceScenarios && line.match(/^(?:\*\*)?Given/i)) {
+        // Try inline format: Given X, When Y, Then Z
+        const inlineMatch = line.match(/Given\s+(.+?),\s*When\s+(.+?),\s*Then\s+(.+)/i);
+        if (inlineMatch) {
+          currentStory.acceptanceScenarios.push({
+            given: inlineMatch[1].replace(/\*\*/g, '').trim(),
+            when: inlineMatch[2].replace(/\*\*/g, '').trim(),
+            then: inlineMatch[3].replace(/\*\*/g, '').trim()
+          });
         }
       }
     }
-
-    i++;
   }
 
   // Add last story
   if (currentStory) {
-    userStories.push(currentStory);
+    stories.push(currentStory);
   }
 
-  // Parse clarifications
-  while (i < lines.length) {
-    const line = lines[i];
-    if (line.startsWith('**Q:**') || line.startsWith('Q:')) {
-      const question = line.replace(/^\*\*Q:\*\*\s*/, '').replace(/^Q:\s*/, '');
-      i++;
-      if (i < lines.length && (lines[i].startsWith('**A:**') || lines[i].startsWith('A:'))) {
-        const answer = lines[i].replace(/^\*\*A:\*\*\s*/, '').replace(/^A:\s*/, '');
-        clarifications.push({ question, answer });
+  return stories;
+}
+
+// Parse Edge Cases section
+function parseEdgeCases(section: string): EdgeCase[] {
+  const edgeCases: EdgeCase[] = [];
+  const lines = section.split('\n');
+
+  for (const line of lines) {
+    // Match "What happens when...? Answer." format
+    const match = line.match(/^(?:[-*]\s*)?What happens (?:when|if)\s+(.+?\?)\s*(.+)$/i);
+    if (match) {
+      edgeCases.push({
+        question: `What happens ${match[1]}`,
+        answer: match[2].trim()
+      });
+    }
+  }
+
+  return edgeCases;
+}
+
+// Parse Requirements section (grouped by category)
+function parseRequirements(section: string): RequirementGroup[] {
+  const groups: RequirementGroup[] = [];
+  const lines = section.split('\n');
+
+  let currentGroup: RequirementGroup | null = null;
+
+  for (const line of lines) {
+    // Category header (e.g., "Task Management", "Due Dates & Priorities")
+    const categoryMatch = line.match(/^(?:###?\s*)?([A-Z][A-Za-z\s&]+)$/);
+    if (categoryMatch && !line.match(/^(?:FR|SC|NFR)-\d+/)) {
+      if (currentGroup && currentGroup.items.length > 0) {
+        groups.push(currentGroup);
+      }
+      currentGroup = {
+        category: categoryMatch[1].trim(),
+        items: []
+      };
+      continue;
+    }
+
+    // Requirement item (FR-XXX: text)
+    const reqMatch = line.match(/^(?:[-*]\s*)?(FR-\d+):\s*(.+)$/);
+    if (reqMatch) {
+      if (!currentGroup) {
+        currentGroup = { category: 'General', items: [] };
+      }
+      currentGroup.items.push({
+        id: reqMatch[1],
+        text: reqMatch[2].trim()
+      });
+    }
+  }
+
+  // Add last group
+  if (currentGroup && currentGroup.items.length > 0) {
+    groups.push(currentGroup);
+  }
+
+  return groups;
+}
+
+// Parse Key Entities section
+function parseEntities(section: string): Entity[] {
+  const entities: Entity[] = [];
+  const lines = section.split('\n');
+
+  let currentEntity: Entity | null = null;
+
+  for (const line of lines) {
+    // Entity header (e.g., "Task: Represents a single todo item")
+    const entityMatch = line.match(/^(?:\*\*)?([A-Z][A-Za-z\s]+)(?:\*\*)?:\s*(.+)$/);
+    if (entityMatch && !line.match(/^[-*]\s/)) {
+      if (currentEntity) {
+        entities.push(currentEntity);
+      }
+      currentEntity = {
+        name: entityMatch[1].trim(),
+        description: entityMatch[2].trim(),
+        properties: []
+      };
+      continue;
+    }
+
+    // Property line (bullet point under entity)
+    if (currentEntity && line.match(/^[-*]\s+/)) {
+      const property = line.replace(/^[-*]\s+/, '').trim();
+      if (property) {
+        currentEntity.properties.push(property);
       }
     }
-    i++;
   }
 
-  return { metadata, userStories, clarifications, otherContent };
+  // Add last entity
+  if (currentEntity) {
+    entities.push(currentEntity);
+  }
+
+  return entities;
+}
+
+// Parse Success Criteria section
+function parseSuccessCriteria(section: string): Requirement[] {
+  const criteria: Requirement[] = [];
+  const lines = section.split('\n');
+
+  for (const line of lines) {
+    // Success Criteria item (SC-XXX: text)
+    const match = line.match(/^(?:[-*]\s*)?(SC-\d+):\s*(.+)$/);
+    if (match) {
+      criteria.push({
+        id: match[1],
+        text: match[2].trim()
+      });
+    }
+  }
+
+  return criteria;
+}
+
+// Parse Clarifications section
+function parseClarifications(section: string): Clarification[] {
+  const clarifications: Clarification[] = [];
+  const lines = section.split('\n');
+
+  let currentSession: string | undefined;
+
+  for (let i = 0; i < lines.length; i++) {
+    const line = lines[i];
+
+    // Session header (e.g., "Session 2025-12-29")
+    const sessionMatch = line.match(/^(?:###?\s*)?Session\s+(\S+)/i);
+    if (sessionMatch) {
+      currentSession = sessionMatch[1];
+      continue;
+    }
+
+    // Q&A format: "Q: question → A: answer" or "**Q:** question"
+    const qaMatch = line.match(/^(?:\*\*)?Q(?:\*\*)?:\s*(.+?)(?:\s*→\s*(?:\*\*)?A(?:\*\*)?:\s*(.+))?$/i);
+    if (qaMatch) {
+      const question = qaMatch[1].trim();
+      let answer = qaMatch[2]?.trim() || '';
+
+      // If answer not on same line, check next line
+      if (!answer && i + 1 < lines.length) {
+        const nextLine = lines[i + 1];
+        const answerMatch = nextLine.match(/^(?:\*\*)?A(?:\*\*)?:\s*(.+)$/i);
+        if (answerMatch) {
+          answer = answerMatch[1].trim();
+          i++; // Skip the answer line
+        }
+      }
+
+      if (question) {
+        clarifications.push({
+          session: currentSession,
+          question,
+          answer
+        });
+      }
+    }
+  }
+
+  return clarifications;
+}
+
+// Parse Assumptions section
+function parseAssumptions(section: string): string[] {
+  const assumptions: string[] = [];
+  const lines = section.split('\n');
+
+  for (const line of lines) {
+    // Bullet point items
+    const match = line.match(/^[-*]\s+(.+)$/);
+    if (match) {
+      assumptions.push(match[1].trim());
+    }
+  }
+
+  return assumptions;
 }
 
 // Priority badge component
@@ -329,14 +601,7 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
   const parsedSpec = useMemo(() => {
     if (!content) return null;
     try {
-      const result = parseSpecContent(content);
-      console.log('Parsed spec result:', {
-        title: result.metadata.title,
-        storiesCount: result.userStories.length,
-        clarificationsCount: result.clarifications.length,
-        firstLines: content.split('\n').slice(0, 5)
-      });
-      return result;
+      return parseSpecContent(content);
     } catch (e) {
       console.error('Parser error:', e);
       return null;
@@ -347,7 +612,12 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
   const hasStructuredContent = parsedSpec && (
     parsedSpec.metadata.title ||
     parsedSpec.userStories.length > 0 ||
-    parsedSpec.clarifications.length > 0
+    parsedSpec.edgeCases.length > 0 ||
+    parsedSpec.requirements.length > 0 ||
+    parsedSpec.entities.length > 0 ||
+    parsedSpec.successCriteria.length > 0 ||
+    parsedSpec.clarifications.length > 0 ||
+    parsedSpec.assumptions.length > 0
   );
 
   if (!content) {
@@ -454,6 +724,106 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
             </div>
           )}
 
+          {/* Edge Cases */}
+          {parsedSpec && parsedSpec.edgeCases.length > 0 && (
+            <div>
+              <h2 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2">
+                <AlertTriangle className="w-4 h-4" />
+                Edge Cases ({parsedSpec.edgeCases.length})
+              </h2>
+              <div className="space-y-2">
+                {parsedSpec.edgeCases.map((edgeCase, index) => (
+                  <div key={index} className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
+                    <div className="flex items-start gap-3">
+                      <HelpCircle className="w-4 h-4 text-amber-400 mt-0.5 flex-shrink-0" />
+                      <div className="flex-1">
+                        <p className="text-sm font-medium text-[var(--foreground)]">{edgeCase.question}</p>
+                        <p className="text-sm text-[var(--muted-foreground)] mt-1">{edgeCase.answer}</p>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Requirements */}
+          {parsedSpec && parsedSpec.requirements.length > 0 && (
+            <div>
+              <h2 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2">
+                <ListChecks className="w-4 h-4" />
+                Functional Requirements ({parsedSpec.requirements.reduce((acc, g) => acc + g.items.length, 0)})
+              </h2>
+              <div className="space-y-4">
+                {parsedSpec.requirements.map((group, groupIndex) => (
+                  <div key={groupIndex} className="bg-[var(--card)] border border-[var(--border)] rounded-lg overflow-hidden">
+                    <div className="px-4 py-2 bg-[var(--secondary)]/50 border-b border-[var(--border)]">
+                      <h3 className="text-sm font-medium">{group.category}</h3>
+                    </div>
+                    <div className="p-4 space-y-2">
+                      {group.items.map((req) => (
+                        <div key={req.id} className="flex items-start gap-3 text-sm">
+                          <code className="text-xs font-mono bg-blue-500/20 text-blue-400 px-1.5 py-0.5 rounded flex-shrink-0">
+                            {req.id}
+                          </code>
+                          <span className="text-[var(--foreground)]">{req.text}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Key Entities */}
+          {parsedSpec && parsedSpec.entities.length > 0 && (
+            <div>
+              <h2 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2">
+                <Database className="w-4 h-4" />
+                Key Entities ({parsedSpec.entities.length})
+              </h2>
+              <div className="grid gap-4 md:grid-cols-2">
+                {parsedSpec.entities.map((entity, index) => (
+                  <div key={index} className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
+                    <h3 className="text-sm font-semibold text-[var(--foreground)] mb-1">{entity.name}</h3>
+                    <p className="text-xs text-[var(--muted-foreground)] mb-3">{entity.description}</p>
+                    {entity.properties.length > 0 && (
+                      <ul className="space-y-1">
+                        {entity.properties.map((prop, propIndex) => (
+                          <li key={propIndex} className="text-xs text-[var(--muted-foreground)] flex items-start gap-2">
+                            <span className="text-[var(--muted-foreground)]">•</span>
+                            <span>{prop}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Success Criteria */}
+          {parsedSpec && parsedSpec.successCriteria.length > 0 && (
+            <div>
+              <h2 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4" />
+                Success Criteria ({parsedSpec.successCriteria.length})
+              </h2>
+              <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4 space-y-2">
+                {parsedSpec.successCriteria.map((criterion) => (
+                  <div key={criterion.id} className="flex items-start gap-3 text-sm">
+                    <code className="text-xs font-mono bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded flex-shrink-0">
+                      {criterion.id}
+                    </code>
+                    <span className="text-[var(--foreground)]">{criterion.text}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Clarifications */}
           {parsedSpec && parsedSpec.clarifications.length > 0 && (
             <div>
@@ -464,6 +834,9 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
               <div className="space-y-3">
                 {parsedSpec.clarifications.map((qa, index) => (
                   <div key={index} className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
+                    {qa.session && (
+                      <div className="text-xs text-[var(--muted-foreground)] mb-2">Session {qa.session}</div>
+                    )}
                     <div className="flex items-start gap-3 mb-2">
                       <span className="text-xs font-bold text-blue-400 bg-blue-500/20 px-2 py-0.5 rounded">Q</span>
                       <p className="text-sm font-medium">{qa.question}</p>
@@ -474,6 +847,26 @@ export function SpecViewer({ content, className }: SpecViewerProps) {
                     </div>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Assumptions */}
+          {parsedSpec && parsedSpec.assumptions.length > 0 && (
+            <div>
+              <h2 className="text-sm font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-4 flex items-center gap-2">
+                <Lightbulb className="w-4 h-4" />
+                Assumptions ({parsedSpec.assumptions.length})
+              </h2>
+              <div className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
+                <ul className="space-y-2">
+                  {parsedSpec.assumptions.map((assumption, index) => (
+                    <li key={index} className="text-sm text-[var(--foreground)] flex items-start gap-2">
+                      <span className="text-[var(--muted-foreground)]">•</span>
+                      <span>{assumption}</span>
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           )}
