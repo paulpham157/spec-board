@@ -565,6 +565,10 @@ export function parseConstitution(content: string): Constitution {
   const principles: ConstitutionPrinciple[] = [];
   const sections: ConstitutionSection[] = [];
 
+  // Extract title from first # heading (e.g., "# TodoList App Constitution")
+  const titleMatch = content.match(/^#\s+(.+)$/m);
+  const title = titleMatch ? titleMatch[1].trim() : undefined;
+
   // Extract version info from the footer line
   // Format: **Version**: X.X.X | **Ratified**: YYYY-MM-DD | **Last Amended**: YYYY-MM-DD
   const versionMatch = content.match(/\*\*Version\*\*:\s*([^\s|]+)/);
@@ -621,6 +625,7 @@ export function parseConstitution(content: string): Constitution {
 
   return {
     rawContent: content,
+    title,
     principles,
     sections,
     version,

@@ -100,6 +100,7 @@ export interface SyncImpactReport {
 
 export interface Constitution {
   rawContent: string;
+  title?: string;
   principles: ConstitutionPrinciple[];
   sections: ConstitutionSection[];
   version?: string;

@@ -279,7 +279,7 @@ export function ConstitutionViewer({ constitution, className }: ConstitutionView
           <div className="bg-gradient-to-r from-purple-500/10 via-blue-500/10 to-cyan-500/10 border border-[var(--border)] rounded-xl p-6">
             <div className="flex items-center gap-3 mb-4">
               <Gavel className="w-6 h-6 text-purple-400" />
-              <h1 className="text-xl font-bold">Project Constitution</h1>
+              <h1 className="text-xl font-bold">{constitution.title || 'Project Constitution'}</h1>
             </div>
 
             <div className="flex flex-wrap gap-4 text-sm">
