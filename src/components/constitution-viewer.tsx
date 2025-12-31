@@ -299,7 +299,9 @@ export function ConstitutionViewer({ constitution, className }: ConstitutionView
 
       {/* Content */}
       {showRawMarkdown || !hasStructuredContent ? (
-        <MarkdownRenderer content={constitution.rawContent} />
+        <pre className="text-sm font-mono whitespace-pre-wrap bg-[var(--secondary)]/30 p-4 rounded-lg overflow-auto">
+          {constitution.rawContent}
+        </pre>
       ) : (
         <div className="space-y-6">
           {/* Header with version info */}
