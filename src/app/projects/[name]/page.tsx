@@ -3,8 +3,7 @@
 import { useEffect, useCallback, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { KanbanBoard } from '@/components/kanban-board';
-import { ConstitutionPanel } from '@/components/constitution-panel';
-import { ClarityHistoryPanel } from '@/components/clarity-history';
+import { ProjectInfoBubble } from '@/components/project-info-bubble';
 import { FolderOpen, RefreshCw, Wifi, Home, Link as LinkIcon } from 'lucide-react';
 import { useProjectStore } from '@/lib/store';
 import type { Project, Feature } from '@/types';
@@ -187,13 +186,11 @@ export default function ProjectPage() {
       {/* Main content */}
       <main className="flex-1 container mx-auto px-4 py-6">
         <div className="space-y-6">
-          {/* Constitution and Clarity History */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-            <ConstitutionPanel
+          {/* Project Info Bubble */}
+          <div className="flex justify-start">
+            <ProjectInfoBubble
               constitution={project.constitution}
               hasConstitution={project.hasConstitution}
-            />
-            <ClarityHistoryPanel
               features={project.features}
               totalClarifications={project.features.reduce((sum, f) => sum + f.totalClarifications, 0)}
               onFeatureClick={handleFeatureClarificationsClick}
