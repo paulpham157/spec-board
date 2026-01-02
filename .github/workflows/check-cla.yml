@@ -1,0 +1,15 @@
+name: CLA Check
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+jobs:
+  check-cla-checkbox:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Check CLA checkbox
+        uses: MatiBrond/github-actions-checkbox-check@v1.0.2
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          checkbox-text: "I have read and agree to the CLA"
