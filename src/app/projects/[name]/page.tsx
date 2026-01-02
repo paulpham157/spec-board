@@ -4,7 +4,7 @@ import { useEffect, useCallback, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { KanbanBoard } from '@/components/kanban-board';
 import { ProjectInfoBubble } from '@/components/project-info-bubble';
-import { FolderOpen, RefreshCw, Wifi, Home, Link as LinkIcon } from 'lucide-react';
+import { FolderOpen, Home, Settings } from 'lucide-react';
 import { useProjectStore } from '@/lib/store';
 import type { Project, Feature } from '@/types';
 
@@ -18,7 +18,6 @@ export default function ProjectPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [projectPath, setProjectPath] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
   const loadProject = useCallback(async () => {
     setIsLoading(true);
@@ -97,12 +96,6 @@ export default function ProjectPage() {
     router.push('/projects/' + projectSlug + '/features/' + feature.id + '?section=clarifications');
   };
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(window.location.href);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -159,24 +152,12 @@ export default function ProjectPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1 text-xs text-green-400">
-                <Wifi className="w-3 h-3" />
-                <span>Live</span>
-              </div>
               <button
-                onClick={copyLink}
-                className="flex items-center gap-1 text-sm px-3 py-1.5 hover:bg-[var(--secondary)] rounded-lg transition-colors"
-                title="Copy link"
-              >
-                <LinkIcon className="w-3 h-3" />
-                {copied ? 'Copied!' : 'Share'}
-              </button>
-              <button
-                onClick={loadProject}
+                onClick={() => router.push('/settings')}
                 className="p-2 hover:bg-[var(--secondary)] rounded-lg transition-colors"
-                title="Refresh"
+                title="Settings"
               >
-                <RefreshCw className="w-4 h-4" />
+                <Settings className="w-4 h-4" />
               </button>
             </div>
           </div>
