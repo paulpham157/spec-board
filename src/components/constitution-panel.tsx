@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
 import type { Constitution } from '@/types';
+import { MarkdownRenderer } from '@/components/markdown-renderer';
 import {
   ScrollText,
   ChevronDown,
@@ -132,8 +133,8 @@ export function ConstitutionPanel({ constitution, hasConstitution }: Constitutio
                       )}
                     </button>
                     {expandedPrinciples.has(index) && principle.description && (
-                      <div className="px-3 pb-3 text-sm text-[var(--muted-foreground)] whitespace-pre-wrap">
-                        {principle.description}
+                      <div className="px-3 pb-3 text-sm">
+                        <MarkdownRenderer content={principle.description} />
                       </div>
                     )}
                   </div>
@@ -167,8 +168,8 @@ export function ConstitutionPanel({ constitution, hasConstitution }: Constitutio
                       )}
                     </button>
                     {expandedSections.has(index) && section.content && (
-                      <div className="px-3 pb-3 text-sm text-[var(--muted-foreground)] whitespace-pre-wrap">
-                        {section.content}
+                      <div className="px-3 pb-3 text-sm">
+                        <MarkdownRenderer content={section.content} />
                       </div>
                     )}
                   </div>
