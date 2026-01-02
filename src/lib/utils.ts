@@ -45,15 +45,16 @@ export function getStageLabel(stage: string): string {
   return labels[stage] || stage;
 }
 
-// Kanban column types for 4-column view (with review column)
-export type KanbanColumn = 'backlog' | 'in_progress' | 'review' | 'done';
+// Kanban column types for 4-column view
+export type KanbanColumn = 'backlog' | 'planning' | 'in_progress' | 'done';
 
-// Map feature stages to kanban columns (legacy - use getFeatureKanbanColumn for checklist support)
+// Map feature stages to kanban columns (legacy - use getFeatureKanbanColumn for full logic)
 export function getKanbanColumn(stage: FeatureStage): KanbanColumn {
   switch (stage) {
     case 'specify':
-    case 'plan':
       return 'backlog';
+    case 'plan':
+      return 'planning';
     case 'tasks':
     case 'implement':
       return 'in_progress';
@@ -65,31 +66,50 @@ export function getKanbanColumn(stage: FeatureStage): KanbanColumn {
 }
 
 /**
- * Get kanban column for a feature, considering checklist completion.
- * - Backlog: specify, plan stages
- * - In Progress: tasks, implement stages
- * - Review: complete stage but has incomplete checklists
- * - Done: complete stage with all checklists done (or no checklists)
+ * Get kanban column for a feature, considering plan/tasks state and checklist completion.
+ * - Backlog: specify stage (no spec or no plan)
+ * - Planning: has plan but no tasks
+ * - In Progress: has tasks (incomplete tasks OR incomplete checklists)
+ * - Done: all tasks complete AND all checklists complete (or no checklists)
  */
 export function getFeatureKanbanColumn(feature: Feature): KanbanColumn {
-  const baseColumn = getKanbanColumn(feature.stage);
-
-  // Only apply review logic for features that would otherwise be "done"
-  if (baseColumn === 'done') {
-    // If feature has checklists and not all items are completed, put in review
-    if (feature.hasChecklists && feature.completedChecklistItems < feature.totalChecklistItems) {
-      return 'review';
-    }
+  // No spec yet -> backlog
+  if (!feature.hasSpec) {
+    return 'backlog';
   }
 
-  return baseColumn;
+  // Has spec but no plan -> backlog
+  if (!feature.hasPlan) {
+    return 'backlog';
+  }
+
+  // Has plan but no tasks -> planning
+  if (!feature.hasTasks) {
+    return 'planning';
+  }
+
+  // Has tasks - check if all complete
+  const allTasksComplete = feature.totalTasks > 0 && feature.completedTasks === feature.totalTasks;
+
+  // Tasks not complete -> in_progress
+  if (!allTasksComplete) {
+    return 'in_progress';
+  }
+
+  // All tasks complete, but has incomplete checklists -> in_progress
+  if (feature.hasChecklists && feature.completedChecklistItems < feature.totalChecklistItems) {
+    return 'in_progress';
+  }
+
+  // All tasks complete and all checklists complete (or no checklists) -> done
+  return 'done';
 }
 
 export function getKanbanColumnLabel(column: KanbanColumn): string {
   const labels: Record<KanbanColumn, string> = {
     backlog: 'Backlog',
+    planning: 'Planning',
     in_progress: 'In Progress',
-    review: 'Review',
     done: 'Done',
   };
   return labels[column];

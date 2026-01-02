@@ -6,7 +6,7 @@ import type { Feature } from '@/types';
 import { GitBranch, ListTodo, Circle } from 'lucide-react';
 import { announce } from '@/lib/accessibility';
 
-const COLUMNS: KanbanColumn[] = ['backlog', 'in_progress', 'review', 'done'];
+const COLUMNS: KanbanColumn[] = ['backlog', 'planning', 'in_progress', 'done'];
 
 // Get color class based on progress percentage
 // gray (0%) -> red (1-33%) -> yellow (34-66%) -> green (67-100%)
@@ -143,8 +143,8 @@ interface EmptyColumnProps {
 function EmptyColumn({ column }: EmptyColumnProps) {
   const hints: Record<KanbanColumn, string> = {
     backlog: 'Features being specified',
+    planning: 'Features with plan, awaiting tasks',
     in_progress: 'Features being worked on',
-    review: 'Awaiting checklist completion',
     done: 'Fully completed features',
   };
 
@@ -224,8 +224,8 @@ export function KanbanBoard({ features, onFeatureClick }: KanbanBoardProps) {
 
   // Calculate totals for screen reader summary
   const totalFeatures = features.length;
+  const planningCount = featuresByColumn['planning'].length;
   const inProgressCount = featuresByColumn['in_progress'].length;
-  const reviewCount = featuresByColumn['review'].length;
   const doneCount = featuresByColumn['done'].length;
 
   return (
@@ -236,7 +236,7 @@ export function KanbanBoard({ features, onFeatureClick }: KanbanBoardProps) {
       {/* Screen reader summary */}
       <div className="sr-only" aria-live="polite">
         {totalFeatures} total features: {featuresByColumn['backlog'].length} in backlog,
-        {inProgressCount} in progress, {reviewCount} in review, {doneCount} done
+        {planningCount} in planning, {inProgressCount} in progress, {doneCount} done
       </div>
 
       {COLUMNS.map((column) => (
