@@ -166,7 +166,7 @@ function ShortcutsContent() {
 
 function AboutContent() {
   const [appInfo, setAppInfo] = useState<AppInfo | null>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'readme' | 'changelog'>('overview');
+  const [activeTab, setActiveTab] = useState<'readme' | 'changelog'>('readme');
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -212,18 +212,6 @@ function AboutContent() {
       {/* Tab Navigation */}
       <div className="flex gap-1 border-b border-[var(--border)]">
         <button
-          onClick={() => setActiveTab('overview')}
-          className={cn(
-            'px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
-            activeTab === 'overview'
-              ? 'border-blue-500 text-[var(--foreground)]'
-              : 'border-transparent text-[var(--muted-foreground)] hover:text-[var(--foreground)]'
-          )}
-        >
-          <Info className="w-4 h-4 inline-block mr-2" />
-          Overview
-        </button>
-        <button
           onClick={() => setActiveTab('readme')}
           className={cn(
             'px-4 py-2 text-sm font-medium transition-colors border-b-2 -mb-px',
@@ -250,58 +238,53 @@ function AboutContent() {
       </div>
 
       {/* Tab Content */}
-      {activeTab === 'overview' && (
-        <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] space-y-3">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-[var(--muted-foreground)]">Application</span>
-            <span className="text-sm font-medium">{appInfo.name}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-[var(--muted-foreground)]">Version</span>
-            <span className="font-mono text-xs px-2 py-0.5 bg-[var(--secondary)] rounded border border-[var(--border)]">
-              v{appInfo.version}
-            </span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-[var(--muted-foreground)]">Description</span>
-            <span className="text-sm">{appInfo.description}</span>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-[var(--muted-foreground)]">License</span>
-            <a
-              href={appInfo.licenseUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
-            >
-              {appInfo.license}
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-[var(--muted-foreground)]">Repository</span>
-            <a
-              href={appInfo.repository}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-sm text-blue-400 hover:text-blue-300 flex items-center gap-1"
-            >
-              <Github className="w-4 h-4" />
-              GitHub
-              <ExternalLink className="w-3 h-3" />
-            </a>
-          </div>
-        </div>
-      )}
-
       {activeTab === 'readme' && (
-        <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] max-h-[600px] overflow-y-auto">
-          <ReadmeViewer content={appInfo.readme} />
+        <div className="space-y-4">
+          {/* Overview Info */}
+          <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
+            <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+              <div className="flex items-center gap-2">
+                <span className="text-[var(--muted-foreground)]">Version</span>
+                <span className="font-mono text-xs px-2 py-0.5 bg-[var(--secondary)] rounded border border-[var(--border)]">
+                  v{appInfo.version}
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-[var(--muted-foreground)]">License</span>
+                <a
+                  href={appInfo.licenseUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                >
+                  {appInfo.license}
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+              <div className="flex items-center gap-2">
+                <a
+                  href={appInfo.repository}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:text-blue-300 flex items-center gap-1"
+                >
+                  <Github className="w-4 h-4" />
+                  GitHub
+                  <ExternalLink className="w-3 h-3" />
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* README Content */}
+          <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
+            <ReadmeViewer content={appInfo.readme} />
+          </div>
         </div>
       )}
 
       {activeTab === 'changelog' && (
-        <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] max-h-[600px] overflow-y-auto">
+        <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)]">
           <ChangelogViewer content={appInfo.changelog} />
         </div>
       )}
