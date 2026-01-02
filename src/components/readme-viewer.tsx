@@ -91,7 +91,7 @@ function FeaturesGrid() {
   const features: FeatureItem[] = [
     {
       title: 'Kanban Board',
-      description: ['3-column pipeline', 'Backlog → Done'],
+      description: ['4-column pipeline', 'Backlog → Done'],
       icon: <LayoutGrid className="w-6 h-6" />,
     },
     {
@@ -151,7 +151,7 @@ function HowItWorksFlow() {
     },
     {
       title: 'Kanban Board',
-      items: ['Backlog', 'In Progress', 'Done'],
+      items: ['Backlog', 'Planning', 'In Progress', 'Done'],
       icon: <Columns3 className="w-6 h-6" />,
       color: 'from-green-500/20 to-green-600/10',
       borderColor: 'border-green-500/30',
@@ -181,7 +181,8 @@ function HowItWorksFlow() {
                     <span className={cn(
                       'px-2 py-0.5 rounded text-[10px] font-medium',
                       i === 0 ? 'bg-zinc-600/50 text-zinc-300' :
-                      i === 1 ? 'bg-blue-600/50 text-blue-300' :
+                      i === 1 ? 'bg-yellow-600/50 text-yellow-300' :
+                      i === 2 ? 'bg-blue-600/50 text-blue-300' :
                       'bg-green-600/50 text-green-300'
                     )}>
                       {item}
