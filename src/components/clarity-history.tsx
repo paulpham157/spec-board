@@ -67,8 +67,8 @@ export function ClarityHistoryPanel({ features, totalClarifications, onFeatureCl
         className="w-full flex items-center justify-between p-4 hover:bg-[var(--secondary)] transition-colors"
       >
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-blue-500/10">
-            <MessageCircleQuestion className="w-5 h-5 text-blue-400" />
+          <div className="p-2 rounded-lg bg-[var(--secondary)]">
+            <MessageCircleQuestion className="w-5 h-5 text-[var(--foreground)]" />
           </div>
           <div className="text-left">
             <h3 className="font-semibold">Clarity History</h3>
@@ -79,7 +79,7 @@ export function ClarityHistoryPanel({ features, totalClarifications, onFeatureCl
           </div>
         </div>
         <div className="flex items-center gap-3">
-          <span className="text-xs px-2 py-1 rounded-full bg-blue-500/10 text-blue-400">
+          <span className="text-xs px-2 py-1 rounded-full bg-[var(--secondary)] text-[var(--foreground)]">
             {totalClarifications} Q&A
           </span>
           {isExpanded ? (
@@ -151,7 +151,7 @@ export function ClarityHistoryPanel({ features, totalClarifications, onFeatureCl
                           className="w-full flex items-center justify-between p-2 bg-[var(--secondary)]/30 hover:bg-[var(--secondary)] transition-colors"
                         >
                           <div className="flex items-center gap-2 text-xs">
-                            <Calendar className="w-3.5 h-3.5 text-blue-400" />
+                            <Calendar className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
                             <span className="text-[var(--muted-foreground)]">
                               Session {session.date}
                             </span>
@@ -177,13 +177,13 @@ export function ClarityHistoryPanel({ features, totalClarifications, onFeatureCl
                                 className="rounded-lg bg-[var(--secondary)]/20 p-2 text-sm"
                               >
                                 <div className="flex items-start gap-2">
-                                  <HelpCircle className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
+                                  <HelpCircle className="w-4 h-4 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
                                   <div className="flex-1">
                                     <p className="text-[var(--muted-foreground)]">{qa.question}</p>
                                   </div>
                                 </div>
                                 <div className="flex items-start gap-2 mt-2 pl-6">
-                                  <CheckCircle2 className="w-4 h-4 text-green-400 mt-0.5 flex-shrink-0" />
+                                  <CheckCircle2 className="w-4 h-4 text-[var(--foreground)] mt-0.5 flex-shrink-0" />
                                   <div className="flex-1">
                                     <p className="text-[var(--foreground)]">{qa.answer}</p>
                                   </div>
@@ -238,7 +238,7 @@ export function FeatureClarity({ sessions, totalClarifications }: FeatureClarity
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2 text-sm font-medium">
-        <MessageCircleQuestion className="w-4 h-4 text-blue-400" />
+        <MessageCircleQuestion className="w-4 h-4 text-[var(--muted-foreground)]" />
         <span>Clarifications ({totalClarifications})</span>
       </div>
 
@@ -252,7 +252,7 @@ export function FeatureClarity({ sessions, totalClarifications }: FeatureClarity
             className="w-full flex items-center justify-between p-2 bg-[var(--secondary)]/30 hover:bg-[var(--secondary)] transition-colors"
           >
             <div className="flex items-center gap-2 text-xs">
-              <Calendar className="w-3.5 h-3.5 text-blue-400" />
+              <Calendar className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
               <span>{session.date}</span>
             </div>
             <div className="flex items-center gap-2">
@@ -272,13 +272,13 @@ export function FeatureClarity({ sessions, totalClarifications }: FeatureClarity
               {session.clarifications.map((qa, qaIndex) => (
                 <div
                   key={qaIndex}
-                  className="text-sm border-l-2 border-blue-400/30 pl-3"
+                  className="text-sm border-l-2 border-[var(--border)] pl-3"
                 >
                   <p className="text-[var(--muted-foreground)]">
-                    <span className="text-blue-400 font-medium">Q:</span> {qa.question}
+                    <span className="text-[var(--foreground)] font-medium">Q:</span> {qa.question}
                   </p>
                   <p className="mt-1">
-                    <span className="text-green-400 font-medium">A:</span> {qa.answer}
+                    <span className="text-[var(--foreground)] font-medium">A:</span> {qa.answer}
                   </p>
                 </div>
               ))}
