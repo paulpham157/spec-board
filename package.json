@@ -1,6 +1,6 @@
 {
   "name": "spec-board",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "description": "Visual dashboard for spec-kit task management",
   "scripts": {
     "dev": "dotenv -- sh -c 'next dev -p ${PORT:-3000}'",

@@ -7,53 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Added
-- **Constitution Viewer Enhancements** - Structured display with collapsible sections:
-  - Display actual constitution title from `# Heading` in constitution.md
-  - Parse and display Sync Impact Report from HTML comments
-  - Sections (Quality Standards, Development Workflow, Governance) displayed as headers with subsection cards
-  - Core Principles displayed as expandable cards
-  - Structured/Markdown toggle (Markdown tab shows raw source)
-  - Version metadata (version, ratified date, last amended date) in header
-- **New Constitution Types** - Extended type system for constitution parsing:
-  - `ConstitutionSubsection` for `###` headings within sections
-  - `SyncImpactReport` for sync impact metadata from HTML comments
-  - `title` field on `Constitution` interface
-
-### Fixed
-- **Spec Viewer Parser** - Aligned client-side parser with actual spec.md markdown format:
-  - Fixed section splitting to only match `## ` headers (not arbitrary patterns)
-  - Updated metadata parsing to handle `**Field**: value` format with backticks
-  - Fixed user story parsing to match `### User Story N - Title (Priority: PN)` format
-  - Updated acceptance scenarios to parse bold `**Given**/**When**/**Then**` markers
-  - Fixed Edge Cases parsing to find `### Edge Cases` subsection within User Scenarios
-  - Fixed Key Entities parsing to find `### Key Entities` subsection within Requirements
-  - Fixed Success Criteria parsing to find `### Measurable Outcomes` subsection
-  - Disabled clarifications parsing (handled separately)
+## [1.1.0] - 2026-01-02
 
 ### Added
-- **Semantic Section Icons** - Navigation icons that convey document meaning:
-  - Icons indicate document existence via color (green if exists, muted otherwise)
-  - Spec section shows clarifications count badge
-  - Analysis section shows severity-based icons (warning/success/search)
-- **Group Counts in Navigation** - Additional context for sections:
-  - Tasks section shows User Story count (e.g., "5 US")
-  - Checklists section shows checklist file count (e.g., "3 checklists")
-- **Split View Dual Highlighting** - Both left and right pane sections highlighted in nav when split view is active
+- **Settings Page Redesign** - Complete overhaul of the settings page:
+  - Two-column layout with sidebar navigation
+  - Keyboard shortcuts toggle to enable/disable all shortcuts
+  - About section with README and Changelog tabs
+  - Version info and GitHub links in footer
+- **Beautified README Viewer** - Custom React components replace ASCII diagrams:
+  - `FeaturesGrid` - 6 feature cards with icons in responsive grid
+  - `HowItWorksFlow` - 3-step flow diagram with arrows
+  - `TechStackDisplay` - Frontend/Backend tech cards
+  - `EnhancedMarkdownRenderer` detects ASCII patterns and renders styled components
+- **Changelog Viewer** - Version timeline with visual enhancements:
+  - Color-coded badges for change types (Added=green, Fixed=yellow, Changed=blue)
+  - Collapsible version cards with timeline dots
+- **AGPL-3.0 + Commercial Licensing** - Dual-license model:
+  - Available under AGPL-3.0 for open source use
+  - Commercial license available for proprietary use
+- **Contributor License Agreement (CLA)** - New `CLA.md` file:
+  - Grant of copyright and patent licenses
+  - Dual-licensing acknowledgment
+  - Future license change agreement
+- **Pull Request Template** - `.github/PULL_REQUEST_TEMPLATE.md`:
+  - CLA confirmation checkboxes
+  - Change type selection
+  - Testing checklist
+- **App Info API** - `/api/app-info` endpoint:
+  - Returns version, readme, changelog content
+  - Used by Settings page for dynamic content
 
 ### Changed
-- **Navigation Phase Structure** - Reorganized from 3 phases to 5 phases:
-  - OVERVIEW: Overview, Spec
-  - PLANNING: Plan, Research, Data Model
-  - CODING: Tasks
-  - QA: Analysis
-  - QC: Checklists
-- Moved Spec section from EXECUTE to OVERVIEW phase
-- Renamed EXECUTE phase to CODING
+- **Settings About Tab** - Merged Overview into README tab:
+  - Version, License, GitHub links shown in compact header bar
+  - Full README content displayed below
+  - Removed scroll limits for full content display
+- **Kanban Board Restructure** - Updated column layout:
+  - Added Planning column
+  - Removed Review column
+  - Unified color scheme
+- **Project Info Display** - Replaced Constitution/Clarity panels with single bubble button
+- **Header Simplification** - Replaced Live/Share/Refresh buttons with Settings icon
 
 ### Fixed
-- Navigation highlight sync issue where Overview stayed highlighted after clicking other sections
-- `selectedNavIndex` now syncs with `activeSection` on click
+- PR template URLs (added missing `/` in paths)
+- README documentation links converted to absolute GitHub URLs
 
 ## [0.3.0] - 2024-12-30
 

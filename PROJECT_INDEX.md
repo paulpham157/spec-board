@@ -7,7 +7,7 @@
 
 **SpecBoard** is a real-time dashboard for visualizing spec-kit projects. It provides a Kanban-style interface for tracking feature development through stages (specify → plan → tasks → implement → complete), with live updates via Server-Sent Events (SSE).
 
-**Version:** 1.0.3
+**Version:** 1.1.0
 **License:** AGPL-3.0 (with commercial licensing available)
 **Package Manager:** pnpm 10.26.0
 
