@@ -49,13 +49,13 @@
 
 ## Contributor License Agreement (CLA)
 
-> **Important:** By submitting this pull request, you agree to the terms of our [Contributor License Agreement (CLA)](../CLA.md).
+> **Important:** By submitting this pull request, you agree to the terms of our [Contributor License Agreement (CLA)](https://github.com/paulpham157/spec-board/blob/main/CLA.md).
 
 ### CLA Confirmation
 
-- [ ] I have read and agree to the [Contributor License Agreement (CLA)](../CLA.md)
+- [ ] I have read and agree to the [Contributor License Agreement (CLA)](https://github.com/paulpham157/spec-board/blob/main/CLA.md)
 - [ ] I confirm that this contribution is my original work
-- [ ] I understand that my contribution will be licensed under [AGPL-3.0](../LICENSE)
+- [ ] I understand that my contribution will be licensed under [AGPL-3.0](https://github.com/paulpham157/spec-board/blob/main/LICENSE)
 - [ ] I acknowledge that the project owner may offer this project (including my contributions) under a commercial license
 
 <!-- First-time contributors: Please also comment "I agree to the CLA" below -->
@@ -64,4 +64,4 @@
 
 ## License
 
-This contribution is submitted under the [GNU Affero General Public License v3.0 (AGPL-3.0)](../LICENSE). By submitting this PR, you agree that your contribution will be licensed under the same terms.
+This contribution is submitted under the [GNU Affero General Public License v3.0 (AGPL-3.0)](https://github.com/paulpham157/spec-board/blob/main/LICENSE). By submitting this PR, you agree that your contribution will be licensed under the same terms.
