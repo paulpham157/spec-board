@@ -1,10 +1,13 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowLeft, Settings, Keyboard, Info } from 'lucide-react';
+import { ArrowLeft, Keyboard, Info } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 const APP_VERSION = '1.0.2';
+
+type MenuSection = 'shortcuts' | 'about';
 
 interface ShortcutGroup {
   title: string;
@@ -81,12 +84,79 @@ function ShortcutRow({ keys, description }: { keys: string[]; description: strin
   );
 }
 
-export default function SettingsPage() {
+function ShortcutsContent() {
   return (
-    <div className="min-h-screen flex flex-col">
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-semibold mb-1">Keyboard Shortcuts</h2>
+        <p className="text-sm text-[var(--muted-foreground)]">
+          Navigate SpecBoard faster with keyboard shortcuts
+        </p>
+      </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {SHORTCUT_GROUPS.map((group, index) => (
+          <div key={index} className="space-y-1">
+            <h3 className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-2">
+              {group.title}
+            </h3>
+            <div className="bg-[var(--secondary)]/30 rounded-lg p-3 border border-[var(--border)]">
+              {group.shortcuts.map((shortcut, sIndex) => (
+                <ShortcutRow key={sIndex} keys={shortcut.keys} description={shortcut.description} />
+              ))}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+function AboutContent() {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h2 className="text-lg font-semibold mb-1">About</h2>
+        <p className="text-sm text-[var(--muted-foreground)]">
+          Application information
+        </p>
+      </div>
+      <div className="bg-[var(--secondary)]/30 rounded-lg p-4 border border-[var(--border)] space-y-3">
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-[var(--muted-foreground)]">Application</span>
+          <span className="text-sm font-medium">SpecBoard</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-[var(--muted-foreground)]">Version</span>
+          <span className="font-mono text-xs px-2 py-0.5 bg-[var(--secondary)] rounded border border-[var(--border)]">
+            v{APP_VERSION}
+          </span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-[var(--muted-foreground)]">Description</span>
+          <span className="text-sm">Visual dashboard for spec-kit</span>
+        </div>
+        <div className="flex items-center justify-between">
+          <span className="text-sm text-[var(--muted-foreground)]">License</span>
+          <span className="text-sm">GPL (Copyleft)</span>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export default function SettingsPage() {
+  const [activeSection, setActiveSection] = useState<MenuSection>('shortcuts');
+
+  const menuItems: { id: MenuSection; label: string; icon: React.ReactNode }[] = [
+    { id: 'shortcuts', label: 'Shortcuts', icon: <Keyboard className="w-4 h-4" /> },
+    { id: 'about', label: 'About', icon: <Info className="w-4 h-4" /> },
+  ];
+
+  return (
+    <div className="min-h-screen flex flex-col bg-[var(--background)]">
       {/* Header */}
       <header className="border-b border-[var(--border)] bg-[var(--card)]">
-        <div className="max-w-3xl mx-auto px-6 py-4">
+        <div className="px-6 py-4">
           <div className="flex items-center gap-4">
             <Link
               href="/"
@@ -95,64 +165,48 @@ export default function SettingsPage() {
             >
               <ArrowLeft className="w-5 h-5" />
             </Link>
-            <div className="flex items-center gap-3">
-              <Settings className="w-6 h-6" />
-              <h1 className="text-xl font-bold">Settings</h1>
-            </div>
+            <h1 className="text-xl font-bold">Settings</h1>
           </div>
         </div>
       </header>
 
-      {/* Main content */}
-      <main className="flex-1 max-w-3xl mx-auto w-full px-6 py-6">
-        <div className="space-y-6">
-          {/* Version Info */}
-          <section className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <Info className="w-5 h-5 text-[var(--muted-foreground)]" />
-              <h2 className="text-base font-semibold">About</h2>
-            </div>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center justify-between">
-                <span className="text-[var(--muted-foreground)]">Application</span>
-                <span className="font-medium">SpecBoard</span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[var(--muted-foreground)]">Version</span>
-                <span className="font-mono text-xs px-2 py-0.5 bg-[var(--secondary)] rounded">
-                  v{APP_VERSION}
-                </span>
-              </div>
-              <div className="flex items-center justify-between">
-                <span className="text-[var(--muted-foreground)]">Description</span>
-                <span className="text-[var(--foreground)]">Visual dashboard for spec-kit</span>
-              </div>
-            </div>
-          </section>
+      {/* Main content - 2 column layout */}
+      <div className="flex-1 flex">
+        {/* Left sidebar menu - 1/4 width */}
+        <aside className="w-1/4 min-w-[200px] max-w-[280px] border-r border-[var(--border)] bg-[var(--card)] p-4">
+          <nav className="space-y-1">
+            {menuItems.map((item) => (
+              <button
+                key={item.id}
+                onClick={() => setActiveSection(item.id)}
+                className={cn(
+                  'w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition-colors',
+                  activeSection === item.id
+                    ? 'bg-[var(--secondary)] text-[var(--foreground)]'
+                    : 'text-[var(--muted-foreground)] hover:bg-[var(--secondary)]/50 hover:text-[var(--foreground)]'
+                )}
+              >
+                {item.icon}
+                {item.label}
+              </button>
+            ))}
+          </nav>
+        </aside>
 
-          {/* Keyboard Shortcuts */}
-          <section className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
-            <div className="flex items-center gap-3 mb-4">
-              <Keyboard className="w-5 h-5 text-[var(--muted-foreground)]" />
-              <h2 className="text-base font-semibold">Keyboard Shortcuts</h2>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {SHORTCUT_GROUPS.map((group, index) => (
-                <div key={index} className="space-y-1">
-                  <h3 className="text-xs font-medium text-[var(--muted-foreground)] uppercase tracking-wide mb-2">
-                    {group.title}
-                  </h3>
-                  <div className="bg-[var(--secondary)]/30 rounded-lg p-2">
-                    {group.shortcuts.map((shortcut, sIndex) => (
-                      <ShortcutRow key={sIndex} keys={shortcut.keys} description={shortcut.description} />
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
-          </section>
+        {/* Right content area - 3/4 width */}
+        <main className="flex-1 p-6 overflow-y-auto">
+          {activeSection === 'shortcuts' && <ShortcutsContent />}
+          {activeSection === 'about' && <AboutContent />}
+        </main>
+      </div>
+
+      {/* Footer */}
+      <footer className="border-t border-[var(--border)] bg-[var(--card)] px-6 py-3">
+        <div className="text-center text-xs text-[var(--muted-foreground)]">
+          <span className="font-medium">SpecBoard</span>
+          {' '}v{APP_VERSION} — Visual dashboard for spec-kit — GPL Copyleft
         </div>
-      </main>
+      </footer>
     </div>
   );
 }
