@@ -11,7 +11,7 @@
 │                                                                             │
 │   KANBAN BOARD             SHAREABLE LINKS          REAL-TIME UPDATES       │
 │   ─────────────────        ─────────────────        ──────────────────      │
-│   3-column pipeline        Clean slug-based         Live file watching      │
+│   4-column pipeline        Clean slug-based         Live file watching      │
 │   Backlog → Done           URLs for sharing         via SSE                 │
 │                                                                             │
 │   DASHBOARD METRICS        DEEP LINKING             ACCESSIBLE              │
@@ -25,17 +25,19 @@
 ## How It Works
 
 ```
-┌──────────────┐      ┌──────────────┐      ┌──────────────┐
-│              │      │              │      │              │
-│  spec-kit    │ ───▶ │  SpecBoard   │ ───▶ │   Kanban     │
-│  project     │      │  parses      │      │   Board      │
-│              │      │              │      │              │
-│  specs/      │      │  spec.md     │      │  ┌─┐ ┌─┐ ┌─┐ │
-│  ├─ feature/ │      │  plan.md     │      │  │B│ │P│ │D│ │
-│  │  ├─ spec  │      │  tasks.md    │      │  └─┘ └─┘ └─┘ │
-│  │  ├─ plan  │      │              │      │              │
-│  │  └─ tasks │      │              │      │              │
-└──────────────┘      └──────────────┘      └──────────────┘
+┌──────────────┐      ┌──────────────┐      ┌──────────────────┐
+│              │      │              │      │                  │
+│  spec-kit    │ ───▶ │  SpecBoard   │ ───▶ │   Kanban Board   │
+│  project     │      │  parses      │      │                  │
+│              │      │              │      │  ┌──┐┌──┐┌──┐┌──┐│
+│  specs/      │      │  spec.md     │      │  │B ││P ││I ││D ││
+│  ├─ feature/ │      │  plan.md     │      │  └──┘└──┘└──┘└──┘│
+│  │  ├─ spec  │      │  tasks.md    │      │                  │
+│  │  ├─ plan  │      │              │      │                  │
+│  │  └─ tasks │      │              │      │                  │
+└──────────────┘      └──────────────┘      └──────────────────┘
+
+B = Backlog | P = Planning | I = In Progress | D = Done
 ```
 
 ## Quick Start
