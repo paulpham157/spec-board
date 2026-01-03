@@ -107,5 +107,5 @@ case 'my-action':
 
 - SpecBoard is read-only - card movement shows feedback only
 - Focus state is NOT persisted to localStorage (resets on refresh)
-- All shortcuts disabled in input/textarea/contenteditable elements
+- All shortcuts are disabled in input/textarea/contenteditable elements
 - Screen reader announcements via `announce()` from accessibility module

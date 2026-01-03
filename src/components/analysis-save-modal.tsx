@@ -63,6 +63,10 @@ export function AnalysisSaveModal({
     const focusableElements = modalRef.current.querySelectorAll(
       'button, textarea, [tabindex]:not([tabindex="-1"])'
     );
+
+    // Guard against empty NodeLists
+    if (focusableElements.length === 0) return;
+
     const firstElement = focusableElements[0] as HTMLElement;
     const lastElement = focusableElements[focusableElements.length - 1] as HTMLElement;
 

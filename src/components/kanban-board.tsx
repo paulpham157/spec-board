@@ -1,6 +1,6 @@
 'use client';
 
-import { KeyboardEvent, useEffect, useCallback, useRef } from 'react';
+import { forwardRef, useEffect, useCallback, useRef } from 'react';
 import { cn, getFeatureKanbanColumn, getKanbanColumnLabel, type KanbanColumn } from '@/lib/utils';
 import type { Feature, KanbanColumnType } from '@/types';
 import { GitBranch, ListTodo, Circle } from 'lucide-react';
@@ -28,12 +28,13 @@ function getProgressBarColorStyle(percentage: number, hasItems: boolean): React.
 interface FeatureCardProps {
   feature: Feature;
   onClick: () => void;
-  onKeyDown?: (e: KeyboardEvent<HTMLButtonElement>) => void;
   isFocused?: boolean;
-  cardRef?: React.RefObject<HTMLButtonElement | null>;
 }
 
-function FeatureCard({ feature, onClick, onKeyDown, isFocused, cardRef }: FeatureCardProps) {
+const FeatureCard = forwardRef<HTMLButtonElement, FeatureCardProps>(function FeatureCard(
+  { feature, onClick, isFocused },
+  ref
+) {
   const progressPercentage = feature.totalTasks > 0
     ? Math.round((feature.completedTasks / feature.totalTasks) * 100)
     : 0;
@@ -49,22 +50,10 @@ function FeatureCard({ feature, onClick, onKeyDown, isFocused, cardRef }: Featur
     feature.totalTasks > 0 ? `${feature.completedTasks} of ${feature.totalTasks} tasks complete` : null,
   ].filter(Boolean).join(', ');
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLButtonElement>) => {
-    // Pass to parent handler for navigation
-    onKeyDown?.(e);
-
-    // Handle Enter key for activation
-    if (e.key === 'Enter' || e.key === ' ') {
-      e.preventDefault();
-      onClick();
-    }
-  };
-
   return (
       <button
-        ref={cardRef}
+        ref={ref}
         onClick={onClick}
-        onKeyDown={handleKeyDown}
         aria-label={ariaLabel}
         className={cn(
           'w-full text-left p-4 rounded-lg transition-colors duration-150',
@@ -135,103 +124,7 @@ function FeatureCard({ feature, onClick, onKeyDown, isFocused, cardRef }: Featur
       )}
       </button>
   );
-}
-
-// FeatureCard with callback ref for keyboard navigation
-interface FeatureCardWithRefProps {
-  feature: Feature;
-  onClick: () => void;
-  isFocused?: boolean;
-  setRef: (el: HTMLButtonElement | null) => void;
-}
-
-function FeatureCardWithRef({ feature, onClick, isFocused, setRef }: FeatureCardWithRefProps) {
-  const progressPercentage = feature.totalTasks > 0
-    ? Math.round((feature.completedTasks / feature.totalTasks) * 100)
-    : 0;
-
-  const checklistPercentage = feature.totalChecklistItems > 0
-    ? Math.round((feature.completedChecklistItems / feature.totalChecklistItems) * 100)
-    : 0;
-
-  const ariaLabel = [
-    feature.name,
-    feature.totalTasks > 0 ? `${feature.completedTasks} of ${feature.totalTasks} tasks complete` : null,
-  ].filter(Boolean).join(', ');
-
-  return (
-    <button
-      ref={setRef}
-      onClick={onClick}
-      aria-label={ariaLabel}
-      className={cn(
-        'w-full text-left p-4 rounded-lg transition-colors duration-150',
-        'bg-[var(--card)] border border-[var(--border)]',
-        'hover:bg-[var(--secondary)]',
-        'focus-ring',
-        isFocused && 'ring-2 ring-[var(--ring)] ring-offset-2 ring-offset-[var(--background)]'
-      )}
-    >
-      {/* Title */}
-      <div className="flex items-center gap-2 mb-2">
-        <h4 className="font-medium text-sm text-[var(--foreground)] capitalize truncate">
-          {feature.name}
-        </h4>
-      </div>
-
-      {/* Branch name */}
-      {feature.branch && (
-        <div className="flex items-center gap-1 text-xs text-[var(--muted-foreground)] mb-2">
-          <GitBranch className="w-3 h-3" />
-          <code className="bg-[var(--secondary)] px-1.5 py-0.5 rounded text-[10px]">
-            {feature.branch}
-          </code>
-        </div>
-      )}
-
-      {/* Task count */}
-      <div
-        className="flex items-center gap-1.5 text-xs tabular-nums"
-        style={getProgressColorStyle(progressPercentage, feature.totalTasks > 0)}
-      >
-        <ListTodo className="w-3 h-3" />
-        <span>Tasks</span>
-        <span>{feature.completedTasks}/{feature.totalTasks} ({progressPercentage}%)</span>
-      </div>
-
-      {/* Progress bar */}
-      <div className="mt-3 h-1 bg-[var(--secondary)] rounded-full overflow-hidden">
-        <div
-          className="h-full transition-all duration-300"
-          style={{
-            width: progressPercentage === 0 ? '100%' : `${progressPercentage}%`,
-            ...getProgressBarColorStyle(progressPercentage, feature.totalTasks > 0)
-          }}
-        />
-      </div>
-
-      {/* Checklist progress */}
-      {feature.hasChecklists && feature.totalChecklistItems > 0 && (
-        <div className="mt-3">
-          <div
-            className="flex items-center gap-1.5 text-xs tabular-nums"
-            style={getProgressColorStyle(checklistPercentage, feature.totalChecklistItems > 0)}
-          >
-            <Circle className="w-3 h-3" />
-            <span>Checklists</span>
-            <span>{feature.completedChecklistItems}/{feature.totalChecklistItems} ({checklistPercentage}%)</span>
-          </div>
-          <div className="mt-1.5 h-1 bg-[var(--secondary)] rounded-full overflow-hidden">
-            <div
-              className="h-full transition-all duration-300"
-              style={{ width: `${checklistPercentage}%`, ...getProgressBarColorStyle(checklistPercentage, feature.totalChecklistItems > 0) }}
-            />
-          </div>
-        </div>
-      )}
-    </button>
-  );
-}
+});
 
 interface EmptyColumnProps {
   column: KanbanColumn;
@@ -257,81 +150,16 @@ interface KanbanColumnComponentProps {
   features: Feature[];
   onFeatureClick: (feature: Feature) => void;
   focusedFeatureId: string | null;
-  cardRefs: React.MutableRefObject<Map<string, HTMLButtonElement | null>>;
-}
-
-function KanbanColumnComponent({ column, features, onFeatureClick, focusedFeatureId, cardRefs }: KanbanColumnComponentProps) {
-  const columnLabel = getKanbanColumnLabel(column);
-
-  return (
-    <div
-      className="flex flex-col flex-1 min-w-[250px] max-w-[350px]"
-      role="region"
-      aria-label={`${columnLabel} column`}
-    >
-      {/* Column header - Linear style: minimal, no colored background */}
-      <div className="flex items-center justify-between px-1 py-3 border-b border-[var(--border)]">
-        <h3 className="font-medium text-sm text-[var(--foreground)]" id={`column-${column}-heading`}>
-          {columnLabel}
-        </h3>
-        <span
-          className="text-xs text-[var(--muted-foreground)] tabular-nums"
-          aria-label={`${features.length} features`}
-        >
-          {features.length}
-        </span>
-      </div>
-
-      {/* Column content */}
-      <div
-        className="flex-1 pt-3 space-y-2 min-h-[200px]"
-        role="list"
-        aria-labelledby={`column-${column}-heading`}
-        aria-label={`${columnLabel} features, ${features.length} items`}
-      >
-        {features.length === 0 ? (
-          <EmptyColumn column={column} />
-        ) : (
-          features.map((feature) => {
-            const isFocused = feature.id === focusedFeatureId;
-            return (
-              <div key={feature.id} role="listitem" className="w-full">
-                <FeatureCard
-                  feature={feature}
-                  onClick={() => {
-                    announce(`Opening ${feature.name} details`);
-                    onFeatureClick(feature);
-                  }}
-                  isFocused={isFocused}
-                  cardRef={{
-                    current: cardRefs.current.get(feature.id) ?? null,
-                    // Setter for the ref
-                  } as React.RefObject<HTMLButtonElement | null>}
-                />
-              </div>
-            );
-          })
-        )}
-      </div>
-    </div>
-  );
-}
-
-interface KanbanColumnComponentWithRefsProps {
-  column: KanbanColumn;
-  features: Feature[];
-  onFeatureClick: (feature: Feature) => void;
-  focusedFeatureId: string | null;
   setCardRef: (featureId: string, element: HTMLButtonElement | null) => void;
 }
 
-function KanbanColumnComponentWithRefs({
+function KanbanColumnComponent({
   column,
   features,
   onFeatureClick,
   focusedFeatureId,
   setCardRef,
-}: KanbanColumnComponentWithRefsProps) {
+}: KanbanColumnComponentProps) {
   const columnLabel = getKanbanColumnLabel(column);
 
   return (
@@ -367,14 +195,14 @@ function KanbanColumnComponentWithRefs({
             const isFocused = feature.id === focusedFeatureId;
             return (
               <div key={feature.id} role="listitem" className="w-full">
-                <FeatureCardWithRef
+                <FeatureCard
+                  ref={(el) => setCardRef(feature.id, el)}
                   feature={feature}
                   onClick={() => {
                     announce(`Opening ${feature.name} details`);
                     onFeatureClick(feature);
                   }}
                   isFocused={isFocused}
-                  setRef={(el) => setCardRef(feature.id, el)}
                 />
               </div>
             );
@@ -498,16 +326,10 @@ export function KanbanBoard({ features, onFeatureClick }: KanbanBoardProps) {
     }
   }, [focusState.featureId, features, onFeatureClick]);
 
-  // Keyboard event handler
-  const handleKeyDown = useCallback((e: globalThis.KeyboardEvent) => {
-    // Only handle if board or its children are focused, or no specific element is focused
-    const activeElement = document.activeElement;
-    const isInBoard = boardRef.current?.contains(activeElement);
-    const isBodyFocused = activeElement === document.body;
-
-    if (!isInBoard && !isBodyFocused) return;
-
+  // Keyboard event handler - scoped to board element
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLElement>) => {
     // Check if we're in an editable element
+    const activeElement = document.activeElement;
     if (activeElement) {
       const tagName = activeElement.tagName.toLowerCase();
       if (tagName === 'input' || tagName === 'textarea' || tagName === 'select') {
@@ -567,12 +389,6 @@ export function KanbanBoard({ features, onFeatureClick }: KanbanBoardProps) {
     }
   }, [navigateVertical, navigateHorizontal, openFocusedCard, focusState.featureId, clearFocusState]);
 
-  // Attach keyboard listener
-  useEffect(() => {
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [handleKeyDown]);
-
   // Focus the card element when focusState changes (FR-008)
   useEffect(() => {
     if (focusState.featureId) {
@@ -597,7 +413,8 @@ export function KanbanBoard({ features, onFeatureClick }: KanbanBoardProps) {
       ref={boardRef}
       aria-label="Feature board"
       className="flex gap-6 overflow-x-auto pb-4"
-      tabIndex={-1}
+      tabIndex={0}
+      onKeyDown={handleKeyDown}
     >
       {/* Screen reader summary */}
       <div className="sr-only" aria-live="polite">
@@ -611,7 +428,7 @@ export function KanbanBoard({ features, onFeatureClick }: KanbanBoardProps) {
       </div>
 
       {COLUMNS.map((column) => (
-        <KanbanColumnComponentWithRefs
+        <KanbanColumnComponent
           key={column}
           column={column}
           features={featuresByColumn[column]}
