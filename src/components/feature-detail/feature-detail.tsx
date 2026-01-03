@@ -111,7 +111,9 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
   const [selectedNavIndex, setSelectedNavIndex] = useState(0);
   const [draggedSection, setDraggedSection] = useState<SectionId | null>(null);
   const [dropSide, setDropSide] = useState<'left' | 'right' | null>(null);
-  const [selectedChecklistIndex, setSelectedChecklistIndex] = useState<number | undefined>(undefined);
+  // Separate checklist indices for left and right panes (for independent split view)
+  const [leftChecklistIndex, setLeftChecklistIndex] = useState<number | undefined>(undefined);
+  const [rightChecklistIndex, setRightChecklistIndex] = useState<number | undefined>(undefined);
   const [splitView, setSplitView] = useState<SplitViewState>({
     isActive: false,
     leftPane: initialSection || 'spec',
@@ -134,11 +136,20 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
 
   // Handle section click
   const handleSectionClick = useCallback((sectionId: SectionId, options?: { checklistIndex?: number }) => {
-    // Track selected checklist index
+    // Track selected checklist index - set for the appropriate pane
     if (sectionId === 'checklists') {
-      setSelectedChecklistIndex(options?.checklistIndex);
+      if (splitView.isActive && splitView.focusedPane === 'right') {
+        setRightChecklistIndex(options?.checklistIndex);
+      } else {
+        setLeftChecklistIndex(options?.checklistIndex);
+      }
     } else {
-      setSelectedChecklistIndex(undefined);
+      // Clear checklist index for the appropriate pane when switching to non-checklist section
+      if (splitView.isActive && splitView.focusedPane === 'right') {
+        setRightChecklistIndex(undefined);
+      } else {
+        setLeftChecklistIndex(undefined);
+      }
     }
 
     if (splitView.isActive && splitView.focusedPane === 'right') {
@@ -173,11 +184,23 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
   // Handle drop on content area
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
-    const sectionId = e.dataTransfer.getData('text/plain') as SectionId;
-    if (!sectionId) {
+    const dragData = e.dataTransfer.getData('text/plain');
+    if (!dragData) {
       setDraggedSection(null);
       setDropSide(null);
       return;
+    }
+
+    // Parse drag data - may include checklistIndex (e.g., "checklists:0")
+    let sectionId: SectionId;
+    let checklistIndex: number | undefined;
+
+    if (dragData.includes(':')) {
+      const [section, indexStr] = dragData.split(':');
+      sectionId = section as SectionId;
+      checklistIndex = parseInt(indexStr, 10);
+    } else {
+      sectionId = dragData as SectionId;
     }
 
     // Determine which side the user dropped on
@@ -185,6 +208,15 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
     const rect = target.getBoundingClientRect();
     const dropX = e.clientX - rect.left;
     const isLeftSide = dropX < rect.width / 2;
+
+    // Update selected checklist index if dropping a checklist - set for the appropriate pane
+    if (sectionId === 'checklists' && checklistIndex !== undefined) {
+      if (isLeftSide) {
+        setLeftChecklistIndex(checklistIndex);
+      } else {
+        setRightChecklistIndex(checklistIndex);
+      }
+    }
 
     if (splitView.isActive) {
       // Split view is already active - replace the appropriate pane only
@@ -441,7 +473,7 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
           feature={feature}
           hasConstitution={hasConstitution}
           activeSection={splitView.isActive ? splitView.leftPane : activeSection}
-          activeChecklistIndex={selectedChecklistIndex}
+          activeChecklistIndex={splitView.isActive && splitView.focusedPane === 'right' ? rightChecklistIndex : leftChecklistIndex}
           onSectionClick={handleSectionClick}
           onDragStart={handleDragStart}
           onDragEnd={handleDragEnd}
@@ -506,7 +538,8 @@ export function FeatureDetail({ feature, onClose, hasConstitution = false, const
             onCloseRight={handleCloseRight}
             focusedPane={splitView.focusedPane}
             onFocusChange={handleFocusChange}
-            selectedChecklistIndex={selectedChecklistIndex}
+            leftChecklistIndex={leftChecklistIndex}
+            rightChecklistIndex={rightChecklistIndex}
           />
         </div>
       </div>

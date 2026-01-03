@@ -19,6 +19,7 @@ import type {
   SpecKitFile,
   SpecKitFileType,
   FeatureAnalysis,
+  AnalysisReport,
   SyncImpactReport,
 } from '@/types';
 
@@ -481,28 +482,64 @@ export function parseAdditionalFiles(featurePath: string): SpecKitFile[] {
 }
 
 /**
- * Parse analysis directory for spec alignment data
- * Reads analysis.md from analysis/ directory
+ * Extract ISO timestamp from analysis filename (T004)
+ * Format: YYYY-MM-DD-HH-mm-analysis.md -> YYYY-MM-DDTHH:mm:00
+ */
+export function extractTimestampFromFilename(filename: string): string {
+  // Match: 2026-01-03-16-30-analysis.md
+  const match = filename.match(/^(\d{4})-(\d{2})-(\d{2})-(\d{2})-(\d{2})-analysis\.md$/);
+  if (match) {
+    const [, year, month, day, hour, minute] = match;
+    return `${year}-${month}-${day}T${hour}:${minute}:00`;
+  }
+  // Fallback for legacy analysis.md (no timestamp)
+  return new Date().toISOString();
+}
+
+/**
+ * Parse analysis directory for spec alignment data (T003, T005, T006)
+ * Reads all *-analysis.md files from analysis/ directory
+ * Returns reports sorted by filename (newest first) with backwards compatibility
  */
 export function parseAnalysis(featurePath: string): FeatureAnalysis {
   const analysisDir = path.join(featurePath, 'analysis');
-  const mdPath = path.join(analysisDir, 'analysis.md');
-
-  let markdownContent: string | null = null;
-  let markdownPathResult: string | null = null;
+  const reports: AnalysisReport[] = [];
 
   try {
-    if (fs.existsSync(mdPath)) {
-      markdownContent = fs.readFileSync(mdPath, 'utf-8');
-      markdownPathResult = mdPath;
+    if (fs.existsSync(analysisDir) && fs.statSync(analysisDir).isDirectory()) {
+      // Read all *-analysis.md files
+      const files = fs.readdirSync(analysisDir)
+        .filter(f => f.endsWith('-analysis.md') || f === 'analysis.md')
+        .sort()
+        .reverse(); // Sort descending (newest first by filename)
+
+      for (const filename of files) {
+        const filePath = path.join(analysisDir, filename);
+        try {
+          const content = fs.readFileSync(filePath, 'utf-8');
+          const timestamp = extractTimestampFromFilename(filename);
+          reports.push({
+            filename,
+            timestamp,
+            path: filePath,
+            content,
+          });
+        } catch (error) {
+          console.error(`Failed to read analysis file ${filePath}:`, error);
+        }
+      }
     }
   } catch (error) {
-    console.error(`Failed to read analysis.md at ${mdPath}:`, error);
+    console.error(`Failed to read analysis directory ${analysisDir}:`, error);
   }
 
+  // Backwards compatibility: populate from latest report (T006)
+  const latestReport = reports[0] || null;
+
   return {
-    markdownContent,
-    markdownPath: markdownPathResult,
+    reports,
+    markdownContent: latestReport?.content || null,
+    markdownPath: latestReport?.path || null,
   };
 }
 

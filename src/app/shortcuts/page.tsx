@@ -3,6 +3,12 @@
 import Link from 'next/link';
 import { ArrowLeft, Keyboard } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import {
+  getShortcutsGroupedByCategory,
+  formatShortcutKeys,
+  CATEGORY_LABELS,
+} from '@/lib/shortcuts/shortcut-config';
+import type { ShortcutCategory } from '@/types';
 
 interface ShortcutGroup {
   title: string;
@@ -10,7 +16,8 @@ interface ShortcutGroup {
   shortcuts: { keys: string[]; description: string }[];
 }
 
-const SHORTCUT_GROUPS: ShortcutGroup[] = [
+// Additional context-specific shortcuts not in the global registry
+const ADDITIONAL_SHORTCUT_GROUPS: ShortcutGroup[] = [
   {
     title: 'Feature Detail Page',
     description: 'Shortcuts available when viewing a feature',
@@ -30,26 +37,6 @@ const SHORTCUT_GROUPS: ShortcutGroup[] = [
     description: 'Shortcuts for adjusting the split view divider',
     shortcuts: [
       { keys: ['←', '→'], description: 'Adjust split ratio (when divider is focused)' },
-    ],
-  },
-  {
-    title: 'Kanban Board',
-    description: 'Shortcuts for navigating the feature board',
-    shortcuts: [
-      { keys: ['Enter'], description: 'Open selected feature' },
-      { keys: ['Space'], description: 'Open selected feature' },
-    ],
-  },
-  {
-    title: 'Project Selector',
-    description: 'Shortcuts for browsing and selecting projects',
-    shortcuts: [
-      { keys: ['H'], description: 'Go to home directory' },
-      { keys: ['Backspace'], description: 'Go to parent directory' },
-      { keys: ['↑', '↓'], description: 'Navigate directory list' },
-      { keys: ['Enter'], description: 'Open directory or select project' },
-      { keys: ['Tab'], description: 'Accept path suggestion' },
-      { keys: ['Esc'], description: 'Close modal' },
     ],
   },
   {
@@ -110,6 +97,9 @@ function ShortcutSection({ group }: { group: ShortcutGroup }) {
 }
 
 export default function ShortcutsPage() {
+  const shortcutsByCategory = getShortcutsGroupedByCategory();
+  const categories: ShortcutCategory[] = ['navigation', 'actions', 'help'];
+
   return (
     <div className="min-h-screen flex flex-col">
       {/* Header */}
@@ -139,7 +129,34 @@ export default function ShortcutsPage() {
       {/* Main content */}
       <main className="flex-1 max-w-4xl mx-auto w-full px-6 py-8">
         <div className="grid gap-6">
-          {SHORTCUT_GROUPS.map((group, index) => (
+          {/* Global shortcuts from centralized config */}
+          {categories.map((category) => {
+            const shortcuts = shortcutsByCategory[category];
+            if (shortcuts.length === 0) return null;
+
+            return (
+              <section key={category} className="bg-[var(--card)] border border-[var(--border)] rounded-lg p-4">
+                <h2 className="text-lg font-semibold mb-1">{CATEGORY_LABELS[category]}</h2>
+                <p className="text-sm text-[var(--muted-foreground)] mb-4">
+                  {category === 'navigation' && 'Shortcuts for navigating between views and cards'}
+                  {category === 'actions' && 'Shortcuts for performing actions on cards'}
+                  {category === 'help' && 'Shortcuts for getting help'}
+                </p>
+                <div>
+                  {shortcuts.map((shortcut) => (
+                    <ShortcutRow
+                      key={shortcut.id}
+                      keys={[formatShortcutKeys(shortcut.keys)]}
+                      description={shortcut.description}
+                    />
+                  ))}
+                </div>
+              </section>
+            );
+          })}
+
+          {/* Additional context-specific shortcuts */}
+          {ADDITIONAL_SHORTCUT_GROUPS.map((group, index) => (
             <ShortcutSection key={index} group={group} />
           ))}
         </div>
@@ -148,10 +165,11 @@ export default function ShortcutsPage() {
         <section className="mt-8 bg-blue-500/10 border border-blue-500/20 rounded-lg p-4">
           <h2 className="text-lg font-semibold text-blue-400 mb-2">Tips</h2>
           <ul className="space-y-2 text-sm text-[var(--muted-foreground)]">
+            <li>• Press <KeyBadge>?</KeyBadge> anywhere to open the shortcuts help overlay</li>
+            <li>• Use arrow keys <KeyBadge>↑</KeyBadge><KeyBadge>↓</KeyBadge><KeyBadge>←</KeyBadge><KeyBadge>→</KeyBadge> to navigate the Kanban board</li>
             <li>• Use number keys <KeyBadge>1</KeyBadge>-<KeyBadge>9</KeyBadge> to quickly jump between sections in the feature detail view</li>
             <li>• Hold <KeyBadge>Shift</KeyBadge> while pressing a number to open that section in split view</li>
             <li>• Press <KeyBadge>Ctrl</KeyBadge>+<KeyBadge>\</KeyBadge> to toggle split view for comparing documents side-by-side</li>
-            <li>• Use <KeyBadge>Tab</KeyBadge> to switch focus between left and right panes in split view</li>
           </ul>
         </section>
       </main>

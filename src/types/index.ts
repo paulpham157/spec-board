@@ -40,9 +40,21 @@ export interface SpecKitFile {
 }
 
 // Analysis types for spec alignment tracking
+
+/** Single saved analysis report file (T001) */
+export interface AnalysisReport {
+  filename: string;      // e.g., "2026-01-03-16-30-analysis.md"
+  timestamp: string;     // ISO date extracted from filename
+  path: string;          // Full filesystem path
+  content: string;       // Markdown content
+}
+
+/** Collection of analysis reports for a feature (T002) */
 export interface FeatureAnalysis {
-  markdownContent: string | null;
-  markdownPath: string | null;
+  reports: AnalysisReport[];           // All reports, sorted newest first
+  // Backwards compatibility with existing code
+  markdownContent: string | null;      // Latest report content
+  markdownPath: string | null;         // Latest report path
 }
 
 // Clarification types for tracking Q&A history
@@ -421,4 +433,34 @@ export interface ParsedDataModel {
   searchBehavior: string[];
   dataIntegrity: DataIntegrityRule[];
   otherSections: DataModelSection[];
+}
+
+// ============================================
+// Keyboard Shortcuts Types (005-quick-shortcut)
+// ============================================
+
+/** Category for grouping shortcuts in help overlay */
+export type ShortcutCategory = 'navigation' | 'actions' | 'help';
+
+/** Context where shortcut is active */
+export type ShortcutContext = 'global' | 'kanban' | 'feature-detail' | 'modal';
+
+/** Keyboard shortcut definition */
+export interface Shortcut {
+  id: string;
+  keys: string[];
+  description: string;
+  category: ShortcutCategory;
+  context: ShortcutContext;
+  action: string;
+}
+
+/** Kanban column type for focus tracking */
+export type KanbanColumnType = 'backlog' | 'planning' | 'in_progress' | 'done';
+
+/** Focus state for keyboard navigation on Kanban board */
+export interface FocusState {
+  column: KanbanColumnType | null;
+  cardIndex: number | null;
+  featureId: string | null;
 }

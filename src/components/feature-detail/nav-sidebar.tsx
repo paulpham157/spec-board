@@ -197,8 +197,8 @@ function buildWorkflowSteps(feature: Feature, hasConstitution: boolean): Workflo
           command: `Save the analysis report above to SpecBoard format:\n\n  1. Create directory: specs/${feature.id}/analysis/\n  2. Save the markdown report to: specs/${feature.id}/analysis/YYYY-MM-DD-HH-ii-analysis.md\n\nExtract data from the Coverage Summary Table and Metrics section above.`,
           tooltipContent: 'Currently, Spec-kit does not save analysis results to any files. I recommend using this prompt after /speckit.analyze to save your results for analysis purposes. Click to copy!',
         },
-        ...(feature.analysis ? [
-          { id: 'analysis-results', label: 'analysis.md', type: 'file' as const, sectionId: 'analysis' as SectionId, filePath: `${feature.path}/analysis/analysis.md` },
+        ...(feature.analysis?.reports?.[0] ? [
+          { id: 'analysis-results', label: feature.analysis.reports[0].filename, type: 'file' as const, sectionId: 'analysis' as SectionId, filePath: feature.analysis.reports[0].path },
         ] : []),
       ],
     },
@@ -253,15 +253,19 @@ interface SubItemProps {
 function WorkflowSubItemComponent({ item, isActive, onSectionClick, onDragStart, onDragEnd }: SubItemProps) {
   const [copied, setCopied] = useState(false);
 
-  // Determine if this item is draggable (file items with sectionId)
-  const isDraggable = item.type === 'file' && !!item.sectionId;
+  // Determine if this item is draggable (file or checklist items with sectionId)
+  const isDraggable = (item.type === 'file' || item.type === 'checklist') && !!item.sectionId;
 
   const handleDragStart = useCallback((e: React.DragEvent) => {
     if (!item.sectionId) return;
-    e.dataTransfer.setData('text/plain', item.sectionId);
+    // Include checklistIndex in drag data for checklist items
+    const dragData = item.checklistIndex !== undefined
+      ? `${item.sectionId}:${item.checklistIndex}`
+      : item.sectionId;
+    e.dataTransfer.setData('text/plain', dragData);
     e.dataTransfer.effectAllowed = 'copy';
     onDragStart?.(item.sectionId);
-  }, [item.sectionId, onDragStart]);
+  }, [item.sectionId, item.checklistIndex, onDragStart]);
 
   const handleDragEnd = useCallback(() => {
     onDragEnd?.();

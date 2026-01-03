@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { Project, Feature, FeatureStage } from '@/types';
+import type { Project, Feature, FeatureStage, FocusState } from '@/types';
 
 // Active feature status for dynamic project description
 export interface ActiveFeatureStatus {
@@ -28,6 +28,8 @@ interface ProjectStore {
   error: string | null;
   projectPath: string | null;
   recentProjects: RecentProject[];
+  // Keyboard navigation focus state (FR-008)
+  focusState: FocusState;
 
   // Actions
   setProject: (project: Project | null) => void;
@@ -37,6 +39,9 @@ interface ProjectStore {
   setProjectPath: (path: string | null) => void;
   addRecentProject: (project: Project, slug?: string) => void;
   loadRecentProjects: () => void;
+  // Focus state actions
+  setFocusState: (state: Partial<FocusState>) => void;
+  clearFocusState: () => void;
 }
 
 const RECENT_PROJECTS_KEY = 'specboard-recent-projects';
@@ -167,6 +172,12 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   error: null,
   projectPath: null,
   recentProjects: [],
+  // Initial focus state (no focus)
+  focusState: {
+    column: null,
+    cardIndex: null,
+    featureId: null,
+  },
 
   setProject: (project) => set({ project, error: null }),
 
@@ -177,6 +188,21 @@ export const useProjectStore = create<ProjectStore>((set, get) => ({
   setError: (error) => set({ error, isLoading: false }),
 
   setProjectPath: (projectPath) => set({ projectPath }),
+
+  // Focus state actions (FR-008)
+  setFocusState: (state) =>
+    set((prev) => ({
+      focusState: { ...prev.focusState, ...state },
+    })),
+
+  clearFocusState: () =>
+    set({
+      focusState: {
+        column: null,
+        cardIndex: null,
+        featureId: null,
+      },
+    }),
 
   addRecentProject: (project: Project, slug?: string) => {
     const { recentProjects } = get();

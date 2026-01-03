@@ -23,7 +23,8 @@ interface SplitViewProps {
   onCloseRight: () => void;
   focusedPane: 'left' | 'right';
   onFocusChange: (pane: 'left' | 'right') => void;
-  selectedChecklistIndex?: number;
+  leftChecklistIndex?: number;
+  rightChecklistIndex?: number;
 }
 
 export function SplitView({
@@ -37,7 +38,8 @@ export function SplitView({
   onCloseRight,
   focusedPane,
   onFocusChange,
-  selectedChecklistIndex,
+  leftChecklistIndex,
+  rightChecklistIndex,
 }: SplitViewProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [isDragging, setIsDragging] = useState(false);
@@ -87,7 +89,7 @@ export function SplitView({
           hasConstitution={hasConstitution}
           constitution={constitution}
           showCloseButton={false}
-          selectedChecklistIndex={selectedChecklistIndex}
+          selectedChecklistIndex={leftChecklistIndex}
         />
       </div>
     );
@@ -120,7 +122,7 @@ export function SplitView({
           hasConstitution={hasConstitution}
           constitution={constitution}
           showCloseButton={false}
-          selectedChecklistIndex={selectedChecklistIndex}
+          selectedChecklistIndex={leftChecklistIndex}
         />
       </div>
 
@@ -168,7 +170,7 @@ export function SplitView({
           constitution={constitution}
           showCloseButton={true}
           onClose={onCloseRight}
-          selectedChecklistIndex={selectedChecklistIndex}
+          selectedChecklistIndex={rightChecklistIndex}
         />
       </div>
     </div>

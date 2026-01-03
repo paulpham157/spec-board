@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Script from "next/script";
 import "./globals.css";
 import { ThemeProvider } from "@/components/theme-provider";
+import { ShortcutsProvider } from "@/components/shortcuts-provider";
 
 export const metadata: Metadata = {
   title: "SpecBoard - Kanban for Spec-Kit",
@@ -19,7 +20,9 @@ export default function RootLayout({
         <Script src="/theme-init.js" strategy="beforeInteractive" />
       </head>
       <body className="antialiased min-h-screen">
-        <ThemeProvider>{children}</ThemeProvider>
+        <ThemeProvider>
+          <ShortcutsProvider>{children}</ShortcutsProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

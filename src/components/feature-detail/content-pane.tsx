@@ -494,7 +494,8 @@ export function ContentPane({
         {sectionId === 'checklists' && <ChecklistViewer checklists={checklistFiles} />}
         {sectionId === 'analysis' && (
           <AnalysisViewer
-            analysis={feature.analysis ?? { markdownContent: null, markdownPath: null }}
+            analysis={feature.analysis ?? { reports: [], markdownContent: null, markdownPath: null }}
+            featurePath={feature.path}
           />
         )}
         {sectionId === 'clarifications' && (
