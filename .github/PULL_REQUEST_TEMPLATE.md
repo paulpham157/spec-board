@@ -53,7 +53,7 @@
 
 ### CLA Confirmation
 
-- [ ] I have read and agree to the [Contributor License Agreement (CLA)](https://github.com/paulpham157/spec-board/blob/main/CLA.md)
+- [ ] I have read and agree to the Contributor License Agreement [(CLA)](https://github.com/paulpham157/spec-board/blob/main/CLA.md)
 - [ ] I confirm that this contribution is my original work
 - [ ] I understand that my contribution will be licensed under [AGPL-3.0](https://github.com/paulpham157/spec-board/blob/main/LICENSE)
 

@@ -4,6 +4,7 @@
 
 ![License](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)
 
+[work in process]
 ## Screenshots
 
 ### Kanban Board

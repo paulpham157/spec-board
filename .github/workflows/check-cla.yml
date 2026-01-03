@@ -4,9 +4,86 @@ on:
   pull_request:
     types: [opened, edited, reopened, synchronize]
 
-run: |
-    BODY=${{ toJSON(github.event.pull_request.body) }}
-    echo "$BODY" | jq -r . | grep -q '\[x\] I have read and agree to the Contributor License Agreement (CLA)' || {
-      echo "Pull request rejected! The contributor has not read the Contribution Licensing Agreement (CLA) and has not selected the CLA checkbox to agree to the Contribution Licensing Agreement."
-      exit 1
-    }
+jobs:
+  check-cla:
+    runs-on: ubuntu-latest
+    permissions:
+      pull-requests: write
+    
+    steps:
+      # Step 1: Welcome comment when PR is created
+      - name: Welcome comment on new PR
+        if: github.event.action == 'opened'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            👋 Hello @${{ github.event.pull_request.user.login }}!
+            
+            Thank you for your contribution to this project. **Please comment to confirm** after you have read the CLA.
+            
+            🙏 Thank you!
+      
+      # Step 2: Check if PR uses template
+      - name: Check if PR uses template
+        id: check-template
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if echo "$PR_BODY" | grep -q "I have read and agree to the Contributor License Agreement"; then
+            echo "has_template=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_template=false" >> $GITHUB_OUTPUT
+          fi
+      
+      # Step 3: Comment if template is missing
+      - name: Comment if template missing
+        if: steps.check-template.outputs.has_template == 'false'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ⚠️ @${{ github.event.pull_request.user.login }}
+            
+            **Please create your Pull Request using the template!**
+            
+            1. Edit the current description or close this PR, create a new PR.
+            2. Using the [provided template](https://github.com/paulpham157/spec-board/blob/main/.github/PULL_REQUEST_TEMPLATE.md?plain=1)
+            3. Fill in all required information according to the template
+      
+      # Step 4: Check if CLA checkbox is checked
+      - name: Check CLA checkbox
+        if: steps.check-template.outputs.has_template == 'true'
+        id: check-cla
+        env:
+          PR_BODY: ${{ github.event.pull_request.body }}
+        run: |
+          if echo "$PR_BODY" | grep -qi '\[x\] I have read and agree to the Contributor License Agreement'; then
+            echo "cla_checked=true" >> $GITHUB_OUTPUT
+          else
+            echo "cla_checked=false" >> $GITHUB_OUTPUT
+          fi
+      
+      # Step 5: Comment if CLA is not checked
+      - name: Comment if CLA not checked
+        if: steps.check-template.outputs.has_template == 'true' && steps.check-cla.outputs.cla_checked == 'false'
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ⚠️ @${{ github.event.pull_request.user.login }}
+            
+            **Please read carefully and confirm the CLA in the checkbox!**
+      
+      # Step 6: Fail workflow if requirements are not met
+      - name: Fail if requirements not met
+        if: steps.check-template.outputs.has_template == 'false' || (steps.check-template.outputs.has_template == 'true' && steps.check-cla.outputs.cla_checked == 'false')
+        run: |
+          echo "❌ PR does not meet CLA requirements"
+          exit 1
+      
+      # Step 7: Success message when CLA is checked
+      - name: Success message
+        if: steps.check-cla.outputs.cla_checked == 'true'
+        run: |
+          echo "✅ CLA has been acknowledged. PR is ready for review!"
