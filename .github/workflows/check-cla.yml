@@ -4,12 +4,9 @@ on:
   pull_request:
     types: [opened, edited, reopened, synchronize]
 
-jobs:
-  check-cla-checkbox:
-    runs-on: ubuntu-22.04
-    steps:
-      - name: Check CLA checkbox
-        uses: MatiBrond/github-actions-checkbox-check@431bc68086b573af5536c75b1dfa099cc0d3049f
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          checkbox-text: "I have read and agree to the [Contributor License Agreement (CLA)](https://github.com/paulpham157/spec-board/blob/main/CLA.md)"
+run: |
+    BODY=${{ toJSON(github.event.pull_request.body) }}
+    echo "$BODY" | jq -r . | grep -q '\[x\] I have read and agree to the Contributor License Agreement (CLA)' || {
+      echo "Pull request rejected! The contributor has not read the Contribution Licensing Agreement (CLA) and has not selected the CLA checkbox to agree to the Contribution Licensing Agreement."
+      exit 1
+    }
