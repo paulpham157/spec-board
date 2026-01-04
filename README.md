@@ -32,6 +32,7 @@ Get intelligent next action suggestions and save analysis reports for quality as
 
 - **Kanban Board** — 4-column pipeline (Backlog → Planning → In Progress → Done)
 - **Real-Time Updates** — Live file watching via SSE
+- **Interactive Checklists** — Click or keyboard to toggle checklist items
 - **Deep Linking** — Shareable URLs for projects and features
 - **Progress Tracking** — Visual metrics for tasks and checklists
 - **Accessible** — WCAG 2.2 AA compliant with keyboard navigation

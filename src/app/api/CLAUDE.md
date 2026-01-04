@@ -16,6 +16,9 @@ This directory contains all Next.js API routes using the App Router convention. 
 | `project/route.ts` | Load spec data from filesystem path |
 | `browse/route.ts` | Directory browser with autocomplete |
 | `watch/route.ts` | Server-Sent Events for real-time updates |
+| `checklist/route.ts` | Toggle checklist items in markdown files |
+| `app-info/route.ts` | App metadata (version, readme, changelog) |
+| `analysis/route.ts` | Save analysis reports |
 
 ## Endpoints
 
@@ -94,6 +97,74 @@ This directory contains all Next.js API routes using the App Router convention. 
 | `GET` | `/api/watch?path=...` | SSE stream for file changes |
 
 **Events:** `update` (project data), `error`, `connected`
+
+### Checklist Toggle (`/api/checklist`)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `PATCH` | `/api/checklist` | Toggle a checklist item in a markdown file |
+
+**Request:**
+```typescript
+{
+  filePath: string,    // Absolute path to checklist markdown file
+  lineIndex: number,   // 0-based line number to toggle
+  expectedState: boolean  // Current state for conflict detection
+}
+```
+
+**Response:**
+```typescript
+// Success
+{
+  success: true,
+  newState: boolean,   // New checked state
+  content: string      // Updated file content
+}
+
+// Error
+{
+  success: false,
+  error: 'invalid_path' | 'file_not_found' | 'invalid_line' | 'conflict' | 'write_failed',
+  message: string,
+  currentState?: boolean  // Actual state if conflict
+}
+```
+
+**Security:**
+- Path must be within allowed directories (`isPathSafe()`)
+- File must be `.md` extension
+- File must be in a `checklists/` directory
+- Uses async `fs/promises` for non-blocking I/O
+
+### App Info (`/api/app-info`)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `GET` | `/api/app-info` | Get app metadata |
+
+**Response:**
+```typescript
+{
+  version: string,     // From package.json
+  readme: string,      // README.md content
+  changelog: string    // CHANGELOG.md content
+}
+```
+
+### Analysis (`/api/analysis`)
+
+| Method | Endpoint | Purpose |
+|--------|----------|---------|
+| `POST` | `/api/analysis` | Save analysis report |
+
+**Request:**
+```typescript
+{
+  featurePath: string,  // Path to feature directory
+  content: string       // Analysis markdown content
+}
+```
 
 ## Patterns & Conventions
 
