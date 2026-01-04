@@ -1,15 +1,16 @@
 'use client';
 
-import { useState, useMemo } from 'react';
-import { CheckCircle2, Circle, FolderOpen, AlertCircle } from 'lucide-react';
+import { useState, useMemo, useCallback, useRef, KeyboardEvent } from 'react';
+import { CheckCircle2, Circle, FolderOpen, AlertCircle, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import type { SpecKitFile } from '@/types';
+import type { SpecKitFile, ChecklistToggleResponse } from '@/types';
 
 // Parsed checklist types
 interface ChecklistItem {
   text: string;
   checked: boolean;
   tag?: string; // e.g., "[Gap]", "[Clarity]", "[Assumption]"
+  lineIndex: number; // 0-based line number in source file for toggle API
 }
 
 interface ChecklistSection {
@@ -48,7 +49,8 @@ function parseChecklistContent(content: string): ParsedChecklist {
   let inSummarySection = false;
   let summaryTableStarted = false;
 
-  for (const line of lines) {
+  for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+    const line = lines[lineIndex];
     const trimmed = line.trim();
 
     // Parse title (# heading)
@@ -133,7 +135,7 @@ function parseChecklistContent(content: string): ParsedChecklist {
         text = text.replace(/\s*\[[^\]]+\]$/, '').trim();
       }
 
-      currentSection.items.push({ text, checked, tag });
+      currentSection.items.push({ text, checked, tag, lineIndex });
       continue;
     }
 
@@ -149,7 +151,15 @@ function parseChecklistContent(content: string): ParsedChecklist {
 }
 
 // Checklist item component
-function ChecklistItemRow({ item }: { item: ChecklistItem }) {
+function ChecklistItemRow({
+  item,
+  onToggle,
+  isSaving,
+}: {
+  item: ChecklistItem;
+  onToggle?: (item: ChecklistItem) => void;
+  isSaving?: boolean;
+}) {
   // Get tag color config
   const getTagStyle = (tag: string): { bg: string; textVar: string } => {
     if (tag === 'Gap') return { bg: 'bg-red-500/20', textVar: '--tag-text-error' };
@@ -158,12 +168,39 @@ function ChecklistItemRow({ item }: { item: ChecklistItem }) {
     return { bg: 'bg-[var(--secondary)]', textVar: '--muted-foreground' };
   };
 
+  const handleClick = () => {
+    if (onToggle && !isSaving) {
+      onToggle(item);
+    }
+  };
+
+  const handleKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
+    if ((e.key === ' ' || e.key === 'Enter') && onToggle && !isSaving) {
+      e.preventDefault();
+      onToggle(item);
+    }
+  };
+
+  const isInteractive = !!onToggle;
+
   return (
-    <div className={cn(
-      'flex items-start gap-3 py-2 px-3 rounded-lg transition-colors',
-      item.checked ? 'bg-[var(--color-success)]/5' : 'hover:bg-[var(--secondary)]/30'
-    )}>
-      {item.checked ? (
+    <div
+      className={cn(
+        'flex items-start gap-3 py-2 px-3 rounded-lg transition-colors',
+        item.checked ? 'bg-[var(--color-success)]/5' : 'hover:bg-[var(--secondary)]/30',
+        isInteractive && 'cursor-pointer',
+        isSaving && 'opacity-50 pointer-events-none'
+      )}
+      onClick={handleClick}
+      onKeyDown={handleKeyDown}
+      tabIndex={isInteractive ? 0 : undefined}
+      role={isInteractive ? 'checkbox' : undefined}
+      aria-checked={isInteractive ? item.checked : undefined}
+      aria-label={isInteractive ? `${item.text} - ${item.checked ? 'checked' : 'unchecked'}` : undefined}
+    >
+      {isSaving ? (
+        <Loader2 className="w-4 h-4 mt-0.5 flex-shrink-0 animate-spin text-[var(--muted-foreground)]" />
+      ) : item.checked ? (
         <CheckCircle2 className="w-4 h-4 mt-0.5 flex-shrink-0" style={{ color: 'var(--tag-text-success)' }} />
       ) : (
         <Circle className="w-4 h-4 text-[var(--muted-foreground)] mt-0.5 flex-shrink-0" />
@@ -187,7 +224,15 @@ function ChecklistItemRow({ item }: { item: ChecklistItem }) {
 }
 
 // Section component with progress
-function ChecklistSectionView({ section }: { section: ChecklistSection }) {
+function ChecklistSectionView({
+  section,
+  onToggle,
+  savingItems,
+}: {
+  section: ChecklistSection;
+  onToggle?: (item: ChecklistItem) => void;
+  savingItems?: Set<number>;
+}) {
   const completed = section.items.filter(i => i.checked).length;
   const total = section.items.length;
   const percentage = total > 0 ? Math.round((completed / total) * 100) : 0;
@@ -215,7 +260,12 @@ function ChecklistSectionView({ section }: { section: ChecklistSection }) {
       </div>
       <div className="space-y-1">
         {section.items.map((item, index) => (
-          <ChecklistItemRow key={index} item={item} />
+          <ChecklistItemRow
+            key={index}
+            item={item}
+            onToggle={onToggle}
+            isSaving={savingItems?.has(item.lineIndex)}
+          />
         ))}
       </div>
     </div>
@@ -288,10 +338,18 @@ function SummaryTableView({ rows }: { rows: SummaryTableRow[] }) {
 }
 
 // Structured view component
-function StructuredChecklistView({ parsed, totalItems, completedItems }: {
+function StructuredChecklistView({
+  parsed,
+  totalItems,
+  completedItems,
+  onToggle,
+  savingItems,
+}: {
   parsed: ParsedChecklist;
   totalItems: number;
   completedItems: number;
+  onToggle?: (item: ChecklistItem) => void;
+  savingItems?: Set<number>;
 }) {
   return (
     <div>
@@ -339,7 +397,12 @@ function StructuredChecklistView({ parsed, totalItems, completedItems }: {
 
       {/* Sections */}
       {parsed.sections.map((section, index) => (
-        <ChecklistSectionView key={index} section={section} />
+        <ChecklistSectionView
+          key={index}
+          section={section}
+          onToggle={onToggle}
+          savingItems={savingItems}
+        />
       ))}
 
       {/* Notes */}
@@ -363,16 +426,124 @@ function StructuredChecklistView({ parsed, totalItems, completedItems }: {
 }
 
 // Single checklist file component
-function ChecklistContent({ file }: { file: SpecKitFile }) {
+function ChecklistContent({ file, filePath }: { file: SpecKitFile; filePath: string }) {
   const [showRawMarkdown, setShowRawMarkdown] = useState(false);
-  const parsed = useMemo(() => parseChecklistContent(file.content), [file.content]);
+  const [localContent, setLocalContent] = useState(file.content);
+  const [savingItems, setSavingItems] = useState<Set<number>>(new Set());
+  const [error, setError] = useState<string | null>(null);
+  const debounceTimers = useRef<Map<number, ReturnType<typeof setTimeout>>>(new Map());
+
+  // Re-parse when local content changes
+  const parsed = useMemo(() => parseChecklistContent(localContent), [localContent]);
 
   // Calculate overall progress
   const totalItems = parsed.sections.reduce((sum, s) => sum + s.items.length, 0);
   const completedItems = parsed.sections.reduce((sum, s) => sum + s.items.filter(i => i.checked).length, 0);
 
+  // Handle toggle with optimistic update and debouncing
+  const handleToggle = useCallback(async (item: ChecklistItem) => {
+    const { lineIndex, checked } = item;
+
+    // Clear any existing debounce timer for this item
+    const existingTimer = debounceTimers.current.get(lineIndex);
+    if (existingTimer) {
+      clearTimeout(existingTimer);
+    }
+
+    // Optimistic update - immediately update local state
+    setLocalContent(prevContent => {
+      const lines = prevContent.split('\n');
+      if (lineIndex >= 0 && lineIndex < lines.length) {
+        const line = lines[lineIndex];
+        // Toggle the checkbox
+        lines[lineIndex] = line.replace(/\[([ xX])\]/, checked ? '[ ]' : '[x]');
+      }
+      return lines.join('\n');
+    });
+
+    // Clear any previous error
+    setError(null);
+
+    // Debounce the API call (300ms)
+    const timer = setTimeout(async () => {
+      setSavingItems(prev => new Set(prev).add(lineIndex));
+
+      try {
+        const response = await fetch('/api/checklist', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            filePath,
+            lineIndex,
+            expectedState: checked, // The state BEFORE toggle
+          }),
+        });
+
+        const data: ChecklistToggleResponse = await response.json();
+
+        if (!data.success) {
+          // Rollback only the specific failed item, not the entire document
+          setLocalContent(prevContent => {
+            const lines = prevContent.split('\n');
+            if (lineIndex >= 0 && lineIndex < lines.length) {
+              const line = lines[lineIndex];
+              // Revert the checkbox back to its original state
+              lines[lineIndex] = line.replace(/\[([ xX])\]/, checked ? '[x]' : '[ ]');
+            }
+            return lines.join('\n');
+          });
+          setError(data.message || 'Failed to save changes');
+
+          // If conflict, suggest refresh
+          if (data.error === 'conflict') {
+            setError('File was modified externally. Please refresh the page.');
+          }
+        }
+      } catch (err) {
+        // Rollback only the specific failed item on network error
+        setLocalContent(prevContent => {
+          const lines = prevContent.split('\n');
+          if (lineIndex >= 0 && lineIndex < lines.length) {
+            const line = lines[lineIndex];
+            // Revert the checkbox back to its original state
+            lines[lineIndex] = line.replace(/\[([ xX])\]/, checked ? '[x]' : '[ ]');
+          }
+          return lines.join('\n');
+        });
+        setError('Network error. Please try again.');
+      } finally {
+        setSavingItems(prev => {
+          const next = new Set(prev);
+          next.delete(lineIndex);
+          return next;
+        });
+        debounceTimers.current.delete(lineIndex);
+      }
+    }, 300);
+
+    debounceTimers.current.set(lineIndex, timer);
+  }, [filePath, file.content]);
+
   return (
     <div>
+      {/* Error toast */}
+      {error && (
+        <div
+          className="mb-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-sm text-red-400 flex items-center gap-2"
+          role="alert"
+        >
+          <AlertCircle className="w-4 h-4 flex-shrink-0" />
+          <span>{error}</span>
+          <button
+            onClick={() => setError(null)}
+            className="ml-auto text-red-400 hover:text-red-300"
+            aria-label="Dismiss error"
+          >
+            &times;
+          </button>
+        </div>
+      )}
+
       {/* Toolbar */}
       <div className="flex items-center gap-1 bg-[var(--secondary)] rounded-lg p-1 mb-4" role="tablist" aria-label="View mode">
         <button
@@ -406,15 +577,22 @@ function ChecklistContent({ file }: { file: SpecKitFile }) {
       {/* Content */}
       {showRawMarkdown ? (
         <pre className="text-sm font-mono whitespace-pre-wrap bg-[var(--secondary)]/30 p-4 rounded-lg overflow-auto">
-          {file.content}
+          {localContent}
         </pre>
       ) : (
         <StructuredChecklistView
           parsed={parsed}
           totalItems={totalItems}
           completedItems={completedItems}
+          onToggle={handleToggle}
+          savingItems={savingItems}
         />
       )}
+
+      {/* Screen reader announcement region */}
+      <div aria-live="polite" aria-atomic="true" className="sr-only">
+        {error && `Error: ${error}`}
+      </div>
     </div>
   );
 }
@@ -440,7 +618,7 @@ export function ChecklistViewer({ checklists, className }: ChecklistViewerProps)
   return (
     <div className={cn('flex flex-col', className)}>
       {checklists.map((checklist) => (
-        <ChecklistContent key={checklist.path} file={checklist} />
+        <ChecklistContent key={checklist.path} file={checklist} filePath={checklist.path} />
       ))}
     </div>
   );

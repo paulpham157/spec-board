@@ -4,7 +4,8 @@ import { useEffect, useCallback, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { KanbanBoard } from '@/components/kanban-board';
 import { ProjectInfoBubble } from '@/components/project-info-bubble';
-import { FolderOpen, Home, Settings, Github } from 'lucide-react';
+import { FolderOpen, Settings, Github } from 'lucide-react';
+import Image from 'next/image';
 import { useProjectStore } from '@/lib/store';
 import type { Project, Feature } from '@/types';
 
@@ -133,12 +134,21 @@ export default function ProjectPage() {
             <div className="flex items-center gap-4">
               <button
                 onClick={() => router.push('/')}
-                className="p-2 hover:bg-[var(--secondary)] rounded-lg transition-colors"
+                className="flex items-center gap-3 hover:opacity-80 transition-opacity"
                 title="Home"
               >
-                <Home className="w-4 h-4" />
+                <Image
+                  src="/images/specboard-logo.svg"
+                  alt="SpecBoard Logo"
+                  width={28}
+                  height={28}
+                  className="rounded"
+                />
+                <h1 className="text-xl font-bold">
+                  <span className="text-blue-500">Spec</span>
+                  <span>Board</span>
+                </h1>
               </button>
-              <h1 className="text-xl font-bold">SpecBoard</h1>
               <div className="flex items-center gap-2 text-sm text-[var(--muted-foreground)]">
                 <FolderOpen className="w-4 h-4 flex-shrink-0" />
                 <div className="flex flex-col">

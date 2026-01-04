@@ -20,7 +20,9 @@ jobs:
           body: |
             👋 Hello @${{ github.event.pull_request.user.login }}!
             
-            Thank you for your contribution to this project. **Please comment to confirm** after you have read the CLA.
+            Thank you for your contribution to this project. **Please reply this comment to confirm** after you have read the CLA.
+            - Do you read the Contributor License Agreement?
+            - Do you agree with the Contributor License Agreement?
             
             🙏 Thank you!
       
@@ -47,7 +49,7 @@ jobs:
             
             **Please create your Pull Request using the template!**
             
-            1. Edit the current description or close this PR, create a new PR.
+            1. Edit the current description OR create a new PR (close this PR).
             2. Using the [provided template](https://github.com/paulpham157/spec-board/blob/main/.github/PULL_REQUEST_TEMPLATE.md?plain=1)
             3. Fill in all required information according to the template
       

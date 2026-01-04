@@ -90,6 +90,4 @@ jspm_packages/
 .claude
 agent-includes
 .playwright-mcp
-specs
-.specify
 .codex

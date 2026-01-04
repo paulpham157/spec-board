@@ -464,3 +464,32 @@ export interface FocusState {
   cardIndex: number | null;
   featureId: string | null;
 }
+
+// ============================================
+// Checklist Interaction Types (009-checklists-interaction)
+// ============================================
+
+/** Request payload for toggling a checklist item */
+export interface ChecklistToggleRequest {
+  filePath: string;
+  lineIndex: number;
+  expectedState: boolean;
+}
+
+/** Response from checklist toggle API */
+export interface ChecklistToggleResponse {
+  success: boolean;
+  newState?: boolean;
+  content?: string;
+  error?: 'invalid_path' | 'file_not_found' | 'invalid_line' | 'conflict' | 'write_failed';
+  message?: string;
+  currentState?: boolean;
+}
+
+/** Extended ChecklistItem with line tracking */
+export interface ChecklistItemWithLine {
+  text: string;
+  checked: boolean;
+  tag?: string;
+  lineIndex: number;
+}

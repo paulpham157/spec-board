@@ -1,7 +1,7 @@
 # PROJECT_INDEX.md
 
 > Auto-generated codebase index for SpecBoard
-> Last updated: 2026-01-02
+> Last updated: 2026-01-04
 
 ## Overview
 
@@ -355,10 +355,14 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for development setup, architecture, and 
 ## Generated CLAUDE.md Files
 
 The following directories have CLAUDE.md files for context:
+- `src/CLAUDE.md` - Source directory overview
 - `src/app/CLAUDE.md` - App Router pages and API routes
 - `src/app/api/CLAUDE.md` - API routes documentation
 - `src/components/CLAUDE.md` - UI components
 - `src/components/feature-detail/CLAUDE.md` - Feature modal components
 - `src/lib/CLAUDE.md` - Utilities and helpers
+- `src/lib/markdown/CLAUDE.md` - AST-based markdown parsers
+- `src/lib/shortcuts/CLAUDE.md` - Keyboard shortcuts system
 - `src/lib/accessibility/CLAUDE.md` - Accessibility utilities
 - `src/types/CLAUDE.md` - Type definitions
+- `prisma/CLAUDE.md` - Database schema

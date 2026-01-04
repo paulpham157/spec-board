@@ -1,0 +1,181 @@
+openapi: 3.0.3
+info:
+  title: Checklist Toggle API
+  description: API for toggling checklist items in spec-board markdown files
+  version: 1.0.0
+
+servers:
+  - url: /api
+    description: Local API server
+
+paths:
+  /checklist:
+    patch:
+      summary: Toggle a checklist item
+      description: |
+        Toggles a single checklist item between checked and unchecked states.
+        Uses optimistic concurrency control via expectedState parameter.
+      operationId: toggleChecklistItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ChecklistToggleRequest'
+            examples:
+              toggleUnchecked:
+                summary: Toggle an unchecked item to checked
+                value:
+                  filePath: "/Users/dev/project/specs/001-feature/checklists/requirements.md"
+                  lineIndex: 8
+                  expectedState: false
+              toggleChecked:
+                summary: Toggle a checked item to unchecked
+                value:
+                  filePath: "/Users/dev/project/specs/001-feature/checklists/requirements.md"
+                  lineIndex: 12
+                  expectedState: true
+      responses:
+        '200':
+          description: Toggle successful
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChecklistToggleSuccessResponse'
+              example:
+                success: true
+                newState: true
+                content: "# Checklist\n\n- [x] Item toggled\n- [ ] Other item"
+        '400':
+          description: Invalid request (bad path, invalid line, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChecklistToggleErrorResponse'
+              examples:
+                invalidPath:
+                  summary: Path validation failed
+                  value:
+                    success: false
+                    error: "invalid_path"
+                    message: "Path contains invalid characters or traversal attempt"
+                invalidLine:
+                  summary: Line is not a checkbox
+                  value:
+                    success: false
+                    error: "invalid_line"
+                    message: "Line 15 does not contain a valid checkbox"
+        '404':
+          description: File not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChecklistToggleErrorResponse'
+              example:
+                success: false
+                error: "file_not_found"
+                message: "File does not exist: /path/to/file.md"
+        '409':
+          description: Conflict - expected state doesn't match actual state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChecklistToggleConflictResponse'
+              example:
+                success: false
+                error: "conflict"
+                message: "Expected state 'unchecked' but found 'checked'"
+                currentState: true
+        '500':
+          description: Server error (file write failed, etc.)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ChecklistToggleErrorResponse'
+              example:
+                success: false
+                error: "write_failed"
+                message: "Failed to write file: permission denied"
+
+components:
+  schemas:
+    ChecklistToggleRequest:
+      type: object
+      required:
+        - filePath
+        - lineIndex
+        - expectedState
+      properties:
+        filePath:
+          type: string
+          description: Absolute path to the checklist markdown file
+          example: "/Users/dev/project/specs/001-feature/checklists/requirements.md"
+        lineIndex:
+          type: integer
+          minimum: 0
+          description: 0-based line number of the checkbox to toggle
+          example: 8
+        expectedState:
+          type: boolean
+          description: Current checked state (for conflict detection)
+          example: false
+
+    ChecklistToggleSuccessResponse:
+      type: object
+      required:
+        - success
+        - newState
+        - content
+      properties:
+        success:
+          type: boolean
+          enum: [true]
+        newState:
+          type: boolean
+          description: The new checked state after toggle
+        content:
+          type: string
+          description: Updated file content for UI sync
+
+    ChecklistToggleErrorResponse:
+      type: object
+      required:
+        - success
+        - error
+        - message
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: string
+          enum:
+            - invalid_path
+            - file_not_found
+            - invalid_line
+            - write_failed
+          description: Error code
+        message:
+          type: string
+          description: Human-readable error message
+
+    ChecklistToggleConflictResponse:
+      type: object
+      required:
+        - success
+        - error
+        - message
+        - currentState
+      properties:
+        success:
+          type: boolean
+          enum: [false]
+        error:
+          type: string
+          enum: [conflict]
+        message:
+          type: string
+          description: Human-readable conflict message
+        currentState:
+          type: boolean
+          description: Actual current state of the checkbox

@@ -7,6 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+- **Interactive Checklist Toggle** - Click or keyboard to toggle checklist items:
+  - Optimistic UI updates with per-item rollback on failure
+  - Keyboard accessibility (Tab, Space, Enter) with ARIA attributes
+  - Loading indicators during save operations
+  - 300ms debouncing to prevent rapid API calls
+  - New `/api/checklist` PATCH endpoint for toggling items
+  - 26 unit tests for checklist utilities
+- **SpecBoard Logo & Favicon** - Custom branding assets
+- **Codebase Documentation** - New `src/lib/markdown/CLAUDE.md` for AST parsers
+
+### Changed
+- **API Route Improvements** - Checklist endpoint uses async `fs/promises`
+- **Cross-Platform Path Validation** - Uses `path.extname()` and `path.sep`
+- **TypeScript Types** - Proper React type imports, cross-platform timer types
+
+### Fixed
+- Rollback logic now only reverts specific failed item, not entire document
+- KeyboardEvent type import issue in checklist viewer
+- NodeJS.Timeout type compatibility for client components
+
 ## [1.1.0] - 2026-01-02
 
 ### Added
