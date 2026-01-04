@@ -2,7 +2,8 @@
 
 import { useEffect, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { FolderOpen, Plus, Settings, Github } from 'lucide-react';
+import { Plus, Settings, Github } from 'lucide-react';
+import Image from 'next/image';
 import { useProjectStore, type RecentProject } from '@/lib/store';
 import { RecentProjectsList } from '@/components/recent-projects-list';
 import { OpenProjectModal } from '@/components/open-project-modal';
@@ -100,9 +101,18 @@ export default function Home() {
         <div className="max-w-6xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <FolderOpen className="w-8 h-8 text-green-400" />
+              <Image
+                src="/images/specboard-logo.svg"
+                alt="SpecBoard Logo"
+                width={32}
+                height={32}
+                className="rounded"
+              />
               <div>
-                <h1 className="text-xl font-bold">SpecBoard</h1>
+                <h1 className="text-xl font-bold">
+                  <span className="text-blue-500">Spec</span>
+                  <span>Board</span>
+                </h1>
                 <p className="text-sm text-[var(--muted-foreground)]">
                   Visual dashboard for spec-kit projects
                 </p>
