@@ -34,6 +34,19 @@ const nodeTypes = { mindmap: MindMapNode };
 const edgeTypes = { mindmap: MindMapEdge };
 const nodeOrigin: NodeOrigin = [0.5, 0.5];
 
+// Color palette for auto-cycling
+const NODE_COLOR_PALETTE = [
+  '#f6ad55', // Orange
+  '#68d391', // Green
+  '#63b3ed', // Blue
+  '#b794f4', // Purple
+  '#fc8181', // Red
+  '#4fd1c5', // Teal
+  '#f687b3', // Pink
+  '#faf089', // Yellow
+  '#7f9cf5', // Indigo
+];
+
 // Default edge options with arrow markers
 const defaultEdgeOptions = {
   type: 'mindmap',
@@ -192,15 +205,36 @@ function MindMapCanvas({ projectSlug, projectId }: MindMapCanvasProps) {
   }, [setEdges, saveToServer]);
 
   const addNewNode = useCallback((position: { x: number; y: number }, parentId?: string) => {
+    // Get next color from palette (cycle through)
+    const currentCount = nodesRef.current.length;
+    const nextColor = NODE_COLOR_PALETTE[currentCount % NODE_COLOR_PALETTE.length];
+    
+    // Generate numbered label
+    const ideaNumber = currentCount + 1;
+    const label = `Idea ${ideaNumber}`;
+    
+    const newNodeId = uid();
     const newNode: MindMapFlowNode = {
-      id: uid(), type: 'mindmap', position,
-      data: { label: 'New Idea', color: '#f6ad55', type: 'default' },
+      id: newNodeId, 
+      type: 'mindmap', 
+      position,
+      data: { 
+        label, 
+        color: nextColor, 
+        type: 'default',
+        isNew: true, // Flag for auto-edit mode
+      },
+      selected: true, // Auto-select the new node
     };
+    
     setNodes(nds => {
-      const updated = [...nds, newNode];
+      // Deselect all other nodes
+      const deselected = nds.map(n => ({ ...n, selected: false }));
+      const updated = [...deselected, newNode];
+      
       if (parentId) {
         setEdges(eds => {
-          const newEdges = [...eds, { id: uid(), source: parentId, target: newNode.id, type: 'mindmap' }];
+          const newEdges = [...eds, { id: uid(), source: parentId, target: newNodeId, type: 'mindmap' }];
           saveToServer(updated, newEdges);
           return newEdges;
         });
@@ -292,12 +326,14 @@ function MindMapCanvas({ projectSlug, projectId }: MindMapCanvasProps) {
           nodeColor={(node) => (node.data as MindMapFlowNode['data'])?.color || '#f6ad55'}
           nodeStrokeWidth={3}
           nodeBorderRadius={8}
-          maskColor="rgba(0, 0, 0, 0.7)"
-          className="!bg-[var(--card)] !border !border-[var(--border)] !rounded-xl !shadow-lg"
+          maskColor="rgba(0, 0, 0, 0.8)"
+          className="!bg-[var(--card)]/90 !backdrop-blur-sm !border !border-[var(--border)] !rounded-xl !shadow-xl"
           style={{ 
-            width: 150, 
-            height: 100,
+            width: 200, 
+            height: 130,
           }}
+          pannable
+          zoomable
         />
         
         {/* Hide default controls, we use custom toolbar */}

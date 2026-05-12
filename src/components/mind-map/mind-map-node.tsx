@@ -41,6 +41,7 @@ interface MindMapNodeData {
   featureId?: string;
   priority?: FeaturePriority | null;
   isRoot?: boolean;
+  isNew?: boolean; // Flag for auto-edit mode on creation
 }
 
 function MindMapNodeComponent({ id, data, selected }: NodeProps & { data: MindMapNodeData }) {
@@ -57,6 +58,17 @@ function MindMapNodeComponent({ id, data, selected }: NodeProps & { data: MindMa
   const isRoot = data.isRoot || (outgoingEdges > 0 && incomingEdges === 0);
   const isParent = outgoingEdges > 0;
   const nodeSize = isRoot ? NODE_SIZES.root : isParent ? NODE_SIZES.parent : NODE_SIZES.leaf;
+
+  // Auto-edit mode for newly created nodes
+  useEffect(() => {
+    if (data.isNew && selected) {
+      setIsEditing(true);
+      // Clear the isNew flag
+      setNodes(nds => nds.map(n => 
+        n.id === id ? { ...n, data: { ...n.data, isNew: false } } : n
+      ));
+    }
+  }, [data.isNew, selected, id, setNodes]);
 
   useEffect(() => {
     if (isEditing && inputRef.current) {
