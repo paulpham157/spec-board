@@ -4,7 +4,8 @@ import { useState, useRef, useEffect, useCallback, ReactNode } from 'react';
 import { createPortal } from 'react-dom';
 import { cn } from '@/lib/utils';
 import type { Feature } from '@/types';
-import { GitBranch, Calendar, CheckCircle2 } from 'lucide-react';
+import { GitBranch, Calendar, CheckCircle2, Target } from 'lucide-react';
+import { PriorityLabel } from './priority-label';
 
 interface FeatureCardPopoverProps {
   feature: Feature;
@@ -221,6 +222,21 @@ export function FeatureCardPopover({
                 }}
               />
             </div>
+          </div>
+        )}
+
+        {/* Priority */}
+        {feature.priority && (
+          <div className="pt-3 border-t border-[var(--border)] space-y-1">
+            <div className="flex items-center gap-2">
+              <Target className="w-3.5 h-3.5 text-[var(--muted-foreground)]" />
+              <PriorityLabel priority={feature.priority} size="xs" />
+            </div>
+            {feature.priorityReason && (
+              <p className="text-[10px] text-[var(--muted-foreground)] pl-5 line-clamp-2">
+                {feature.priorityReason}
+              </p>
+            )}
           </div>
         )}
 

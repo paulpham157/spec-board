@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils';
 import { FileText, ClipboardList, ListTodo, CheckCircle2, Plus } from 'lucide-react';
 import { useState } from 'react';
 import { CreateFeatureModal } from './create-feature-modal';
+import { PriorityDot } from './priority-label';
 
 const STAGE_CONFIG: Record<FeatureStage, { label: string; icon: typeof FileText; color: string }> = {
   backlog: { label: 'Backlog', icon: FileText, color: 'var(--status-not-started)' },
@@ -65,8 +66,9 @@ export function FeatureList({ features, onFeatureClick, projectId, onRefresh }: 
                   title={stage.label}
                 />
 
-                <span className="flex-1 text-sm text-[var(--foreground)] truncate">
+                <span className="flex-1 text-sm text-[var(--foreground)] truncate flex items-center gap-2">
                   {feature.name}
+                  <PriorityDot priority={feature.priority} size="xs" />
                 </span>
 
                 <span className={cn(

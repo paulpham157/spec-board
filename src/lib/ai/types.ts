@@ -459,3 +459,44 @@ export interface ViolationReport {
   extraImplementations: string[];
   summary: string;
 }
+
+// ============================================================================
+// Feature Priority Labeling
+// ============================================================================
+
+export type FeaturePriorityValue = 'must_have' | 'nice_to_have' | 'no_need';
+
+export interface GeneratePriorityOptions {
+  featureName: string;
+  featureDescription?: string;
+  specContent?: string;
+  projectDescription?: string;
+  constitution?: string;
+  existingFeatures?: Array<{ name: string; description?: string; priority?: string }>;
+}
+
+export interface GeneratedPriority {
+  priority: FeaturePriorityValue;
+  reason: string;
+  confidence: number; // 0-100
+}
+
+export interface BatchPriorityOptions {
+  projectDescription?: string;
+  constitution?: string;
+  features: Array<{
+    id: string;
+    name: string;
+    description?: string;
+    specContent?: string;
+  }>;
+}
+
+export interface BatchPriorityResult {
+  features: Array<{
+    id: string;
+    priority: FeaturePriorityValue;
+    reason: string;
+    confidence: number;
+  }>;
+}

@@ -70,6 +70,10 @@ model Feature {
   contractsContent  String?  @db.Text // JSON array of {name, content}
   checklistsContent String?  @db.Text // JSON array of {name, content}
 
+  // AI Priority labeling
+  priority         String?   // must_have, nice_to_have, no_need
+  priorityReason   String?   @db.Text @map("priority_reason") // AI's reasoning for the priority
+
   // Background job status for stage transitions
   jobStatus        String?   @default("idle") @map("job_status") // idle, queued, running, completed, failed
   jobProgress      Int?      @default(0) @map("job_progress") // 0-100
@@ -206,6 +210,7 @@ model MindMapNode {
   positionY Float    @default(0) @map("position_y")
   parentId  String?  @map("parent_id")
   type      String   @default("default")
+  priority  String?  // must_have, nice_to_have, no_need (for feature nodes)
   metadata  Json?
 
   createdAt DateTime @default(now()) @map("created_at")

@@ -61,11 +61,11 @@ function MindMapCanvas({ projectSlug, projectId }: MindMapCanvasProps) {
       .then(res => res.ok ? res.json() : null)
       .then(data => {
         if (data) {
-          setNodes((data.nodes || []).map((n: { id: string; positionX: number; positionY: number; label: string; color: string; type: string; metadata?: { featureId?: string } }) => ({
+          setNodes((data.nodes || []).map((n: { id: string; positionX: number; positionY: number; label: string; color: string; type: string; priority?: string; metadata?: { featureId?: string } }) => ({
             id: n.id,
             type: 'mindmap' as const,
             position: { x: n.positionX, y: n.positionY },
-            data: { label: n.label, color: n.color, type: n.type, featureId: n.metadata?.featureId },
+            data: { label: n.label, color: n.color, type: n.type, featureId: n.metadata?.featureId, priority: n.priority || null },
           })));
           setEdges((data.edges || []).map((e: { id: string; sourceId: string; targetId: string }) => ({
             id: e.id,

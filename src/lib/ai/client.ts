@@ -29,7 +29,12 @@ import type {
   GeneratedResearch,
   GeneratedDataModel,
   GeneratedQuickstart,
-  GeneratedContracts
+  GeneratedContracts,
+  // Priority labeling
+  GeneratePriorityOptions,
+  GeneratedPriority,
+  BatchPriorityOptions,
+  BatchPriorityResult
 } from './types';
 import { getAISettings, getAppSettings } from './settings';
 import prisma from '@/lib/prisma';
@@ -522,6 +527,36 @@ Generate 5-7 core principles and 2-3 suggested sections.`;
 
     const content = await this.callAPI(userPrompt, systemPrompt, 4096);
     return this.parseConstitutionResponse(content);
+  }
+
+  // ============================================
+  // Feature Priority Labeling
+  // ============================================
+
+  /**
+   * Generate priority label for a single feature
+   * Analyzes the feature and determines if it's must_have, nice_to_have, or no_need
+   */
+  async generatePriority(options: GeneratePriorityOptions): Promise<GeneratedPriority> {
+    const content = await this.callAPI(
+      this.buildPriorityPrompt(options),
+      'You are a product strategist that evaluates feature priorities based on business value, user impact, and technical necessity.',
+      2048
+    );
+    return this.parsePriorityResponse(content);
+  }
+
+  /**
+   * Generate priority labels for multiple features at once
+   * More efficient than calling generatePriority multiple times
+   */
+  async generateBatchPriority(options: BatchPriorityOptions): Promise<BatchPriorityResult> {
+    const content = await this.callAPI(
+      this.buildBatchPriorityPrompt(options),
+      'You are a product strategist that evaluates feature priorities based on business value, user impact, and technical necessity.',
+      4096
+    );
+    return this.parseBatchPriorityResponse(content);
   }
 
   // ========================================================================
@@ -1239,6 +1274,129 @@ Return ONLY valid JSON, no other text.`;
       console.error('Failed to parse contracts response');
     }
     return { contracts: [] };
+  }
+
+  // ========================================================================
+  // Priority Labeling - Prompt Builders & Parsers
+  // ========================================================================
+
+  private buildPriorityPrompt(options: GeneratePriorityOptions): string {
+    const existingFeaturesContext = options.existingFeatures?.length
+      ? `\nExisting features in this project:\n${options.existingFeatures.map(f => `- ${f.name}${f.priority ? ` (${f.priority})` : ''}: ${f.description || 'No description'}`).join('\n')}`
+      : '';
+
+    return `Analyze this feature and determine its priority level.
+
+Feature Name: ${options.featureName}
+${options.featureDescription ? `Description: ${options.featureDescription}` : ''}
+${options.specContent ? `\nSpec Content:\n${options.specContent.substring(0, 2000)}` : ''}
+${options.projectDescription ? `\nProject Description: ${options.projectDescription}` : ''}
+${options.constitution ? `\nProject Constitution/Principles:\n${options.constitution.substring(0, 1000)}` : ''}
+${existingFeaturesContext}
+
+Priority levels:
+- must_have: Core functionality, critical for MVP, directly impacts primary user goals, or required by constitution/principles
+- nice_to_have: Enhances UX, adds value but not critical, can be deferred to later versions
+- no_need: Out of scope, duplicates existing features, low ROI, or conflicts with project goals
+
+Consider:
+1. User impact: How many users does this affect? How important is it for their workflow?
+2. Business value: Does this directly contribute to project goals?
+3. Technical necessity: Is this required for other features to work?
+4. Constitution alignment: Does this align with project principles?
+5. Scope fit: Is this within the defined scope of the project?
+
+Respond with valid JSON:
+{
+  "priority": "must_have" | "nice_to_have" | "no_need",
+  "reason": "Concise explanation (2-3 sentences) for why this priority was assigned",
+  "confidence": 0-100
+}
+
+Return ONLY valid JSON, no other text.`;
+  }
+
+  private buildBatchPriorityPrompt(options: BatchPriorityOptions): string {
+    const featuresContext = options.features.map(f => 
+      `- ID: ${f.id}\n  Name: ${f.name}\n  Description: ${f.description || 'No description'}${f.specContent ? `\n  Spec excerpt: ${f.specContent.substring(0, 500)}...` : ''}`
+    ).join('\n\n');
+
+    return `Analyze these features and determine priority levels for each.
+
+${options.projectDescription ? `Project Description: ${options.projectDescription}\n` : ''}
+${options.constitution ? `Project Constitution/Principles:\n${options.constitution.substring(0, 1000)}\n` : ''}
+
+Features to analyze:
+${featuresContext}
+
+Priority levels:
+- must_have: Core functionality, critical for MVP, directly impacts primary user goals
+- nice_to_have: Enhances UX, adds value but not critical, can be deferred
+- no_need: Out of scope, duplicates, low ROI, or conflicts with goals
+
+Respond with valid JSON:
+{
+  "features": [
+    {
+      "id": "feature_id",
+      "priority": "must_have" | "nice_to_have" | "no_need",
+      "reason": "Brief explanation",
+      "confidence": 0-100
+    }
+  ]
+}
+
+Return ONLY valid JSON, no other text.`;
+  }
+
+  private parsePriorityResponse(content: string): GeneratedPriority {
+    try {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        const priority = parsed.priority;
+        
+        // Validate priority value
+        if (!['must_have', 'nice_to_have', 'no_need'].includes(priority)) {
+          console.error(`Invalid priority value: ${priority}`);
+          return { priority: 'nice_to_have', reason: 'Could not determine priority', confidence: 0 };
+        }
+        
+        return {
+          priority: priority as 'must_have' | 'nice_to_have' | 'no_need',
+          reason: parsed.reason || 'No reason provided',
+          confidence: typeof parsed.confidence === 'number' ? parsed.confidence : 50
+        };
+      }
+    } catch (error) {
+      console.error('Failed to parse priority response:', error);
+    }
+    return { priority: 'nice_to_have', reason: 'Could not determine priority', confidence: 0 };
+  }
+
+  private parseBatchPriorityResponse(content: string): BatchPriorityResult {
+    try {
+      const jsonMatch = content.match(/\{[\s\S]*\}/);
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0]);
+        
+        if (Array.isArray(parsed.features)) {
+          return {
+            features: parsed.features.map((f: { id: string; priority?: string; reason?: string; confidence?: number }) => ({
+              id: f.id,
+              priority: ['must_have', 'nice_to_have', 'no_need'].includes(f.priority || '')
+                ? f.priority as 'must_have' | 'nice_to_have' | 'no_need'
+                : 'nice_to_have',
+              reason: f.reason || 'No reason provided',
+              confidence: typeof f.confidence === 'number' ? f.confidence : 50
+            }))
+          };
+        }
+      }
+    } catch (error) {
+      console.error('Failed to parse batch priority response:', error);
+    }
+    return { features: [] };
   }
 }
 

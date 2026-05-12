@@ -36,7 +36,12 @@ import type {
   GeneratedResearch,
   GeneratedDataModel,
   GeneratedQuickstart,
-  GeneratedContracts
+  GeneratedContracts,
+  // Priority labeling
+  GeneratePriorityOptions,
+  GeneratedPriority,
+  BatchPriorityOptions,
+  BatchPriorityResult
 } from './types';
 
 /**
@@ -217,4 +222,30 @@ export async function detectViolations(options: ViolationDetectionOptions): Prom
   console.log(`[AI] Detecting spec violations with ${provider}`);
 
   return aiService.detectViolations(options);
+}
+
+// ============================================================================
+// Feature Priority Labeling
+// ============================================================================
+
+/**
+ * Generate priority label for a single feature
+ * Analyzes the feature and determines if it's must_have, nice_to_have, or no_need
+ */
+export async function generatePriority(options: GeneratePriorityOptions): Promise<GeneratedPriority> {
+  const provider = await getProvider();
+  console.log(`[AI] Generating priority label with ${provider}`);
+
+  return aiService.generatePriority(options);
+}
+
+/**
+ * Generate priority labels for multiple features at once
+ * More efficient than calling generatePriority multiple times
+ */
+export async function generateBatchPriority(options: BatchPriorityOptions): Promise<BatchPriorityResult> {
+  const provider = await getProvider();
+  console.log(`[AI] Generating batch priority labels with ${provider}`);
+
+  return aiService.generateBatchPriority(options);
 }

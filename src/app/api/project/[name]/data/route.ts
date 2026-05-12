@@ -62,6 +62,8 @@ export async function GET(
                 jobStatus: true,
                 jobProgress: true,
                 jobMessage: true,
+                priority: true,
+                priorityReason: true,
                 _count: {
                   select: {
                     tasks: true,
@@ -178,6 +180,8 @@ export async function GET(
           checklistsContent: null,
           analysisContent: null,
           additionalFiles: [],
+          priority: feature.priority || null,
+          priorityReason: feature.priorityReason || null,
         };
       }
 
@@ -231,6 +235,8 @@ export async function GET(
         checklistsContent: feature.checklistsContent,
         analysisContent: feature.analysisContent,
         additionalFiles: [],
+        priority: feature.priority || null,
+        priorityReason: feature.priorityReason || null,
       };
     });
 

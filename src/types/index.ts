@@ -1,5 +1,14 @@
 export type FeatureStage = 'backlog' | 'specs' | 'plan' | 'tasks';
 
+// AI Priority labeling for features
+export type FeaturePriority = 'must_have' | 'nice_to_have' | 'no_need';
+
+export const PRIORITY_CONFIG: Record<FeaturePriority, { label: string; color: string; bgColor: string }> = {
+  must_have: { label: 'Must Have', color: 'text-red-500', bgColor: 'bg-red-500/10' },
+  nice_to_have: { label: 'Nice to Have', color: 'text-yellow-500', bgColor: 'bg-yellow-500/10' },
+  no_need: { label: 'No Need', color: 'text-gray-500', bgColor: 'bg-gray-500/10' },
+};
+
 // Recent project type (used in store and components)
 export interface RecentProject {
   path: string;
@@ -212,6 +221,9 @@ export interface Feature {
   jobStatus?: 'idle' | 'queued' | 'running' | 'completed' | 'failed';
   jobProgress?: number;
   jobMessage?: string;
+  // AI Priority labeling
+  priority?: FeaturePriority | null;
+  priorityReason?: string | null;
 }
 
 export interface Project {
@@ -604,6 +616,7 @@ export interface MindMapNodeData {
   positionY: number;
   parentId: string | null;
   type: MindMapNodeType;
+  priority?: FeaturePriority | null;  // AI priority for feature nodes
   metadata?: Record<string, unknown>;
   createdAt: string;
   updatedAt: string;

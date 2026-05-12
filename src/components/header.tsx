@@ -2,26 +2,30 @@
 
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { Settings, ChevronRight, Pencil, Network } from 'lucide-react';
+import { Settings, ChevronRight, Pencil, Network, Sparkles, Loader2 } from 'lucide-react';
 import { ThemeButton } from '@/components/theme-button';
 import { Tooltip } from '@/components/tooltip';
 import { GitHubStars } from '@/components/github-stars';
 import { useSettingsStore } from '@/lib/settings-store';
+import { toast } from 'sonner';
 
 interface HeaderProps {
   variant: 'home' | 'project';
   projectName?: string;
   projectPath?: string;
   projectSlug?: string;
+  projectId?: string;
   onNewProject?: () => void;
   onProjectNameChange?: (newName: string) => void;
+  onRefresh?: () => void;
 }
 
-export function Header({ variant, projectName, projectSlug, onNewProject, onProjectNameChange }: HeaderProps) {
+export function Header({ variant, projectName, projectSlug, projectId, onNewProject, onProjectNameChange, onRefresh }: HeaderProps) {
   const router = useRouter();
   const { openSettings } = useSettingsStore();
   const [isEditingName, setIsEditingName] = useState(false);
   const [editName, setEditName] = useState(projectName || '');
+  const [isPrioritizing, setIsPrioritizing] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -55,6 +59,33 @@ export function Header({ variant, projectName, projectSlug, onNewProject, onProj
       handleCancelEdit();
     }
   }, [handleSaveName, handleCancelEdit]);
+
+  const handlePrioritizeAll = useCallback(async () => {
+    if (!projectId) return;
+    
+    setIsPrioritizing(true);
+    try {
+      const res = await fetch('/api/spec-workflow/prioritize', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId }),
+      });
+      
+      if (!res.ok) {
+        const data = await res.json();
+        throw new Error(data.error || 'Failed to prioritize features');
+      }
+      
+      const data = await res.json();
+      toast.success(`Prioritized ${data.features?.length || 0} features`);
+      onRefresh?.();
+    } catch (error) {
+      console.error('Prioritize error:', error);
+      toast.error(error instanceof Error ? error.message : 'Failed to prioritize features');
+    } finally {
+      setIsPrioritizing(false);
+    }
+  }, [projectId, onRefresh]);
 
   return (
     <header className="border-b border-[var(--border)] h-14 bg-[var(--background)]">
@@ -183,6 +214,23 @@ export function Header({ variant, projectName, projectSlug, onNewProject, onProj
               >
                 New
               </button>
+            )}
+
+            {variant === 'project' && projectId && (
+              <Tooltip content="AI Prioritize All Features" side="bottom">
+                <button
+                  onClick={handlePrioritizeAll}
+                  disabled={isPrioritizing}
+                  className="btn-icon"
+                  aria-label="AI Prioritize"
+                >
+                  {isPrioritizing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <Sparkles className="w-4 h-4" />
+                  )}
+                </button>
+              </Tooltip>
             )}
 
             {variant === 'project' && projectSlug && (

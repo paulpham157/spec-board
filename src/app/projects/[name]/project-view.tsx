@@ -199,7 +199,9 @@ export default function ProjectView() {
         projectName={project?.name}
         projectPath={projectPath || undefined}
         projectSlug={projectSlug}
+        projectId={projectId || undefined}
         onProjectNameChange={handleProjectNameChange}
+        onRefresh={loadProject}
       />
 
       <main className="flex-1 container mx-auto px-4 py-6">
