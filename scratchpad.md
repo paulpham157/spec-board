@@ -94,7 +94,28 @@
 
 # Scratchpad
 
-## Current Task: Auto-Labeling Features with AI Priority - COMPLETED
+## Current Task: Mind Map UI/UX Improvements - COMPLETED
+
+### Implemented Changes
+
+[X] 1. Color palette - 10 colors organized by Warm/Cool/Neutral với dropdown picker
+[X] 2. Priority borders - border-[3px] + glow shadow effects cho must_have/nice_to_have/no_need
+[X] 3. Node sizing - 3 sizes: root (160px), parent (130px), leaf (100px) based on connections
+[X] 4. Edge styling - Bezier curves với gradient colors + animated flow dots
+[X] 5. Minimap - React Flow MiniMap ở góc phải với node colors
+[X] 6. Empty state - Lightbulb illustration + "Start Brainstorming" CTA + tips
+[X] 7. Toolbar upgrade - Zoom in/out/fit view + Color picker dropdown
+[X] 8. Animations - animate-in fade-in zoom-in-95 cho nodes, hover:scale-105
+
+### Files Modified
+- `src/components/mind-map/mind-map-node.tsx` - Priority glow, node sizing, better styling
+- `src/components/mind-map/mind-map-edge.tsx` - Bezier curves, gradient, animated dots
+- `src/components/mind-map/mind-map-toolbar.tsx` - Color picker dropdown, zoom controls
+- `src/components/mind-map/index.tsx` - MiniMap, EmptyState, status indicators
+
+---
+
+## Previous Task: Auto-Labeling Features with AI Priority - COMPLETED
 
 ### Requirement (Done)
 - AI tự động đánh giá và gắn nhãn priority cho features:
