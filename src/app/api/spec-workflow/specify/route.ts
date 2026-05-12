@@ -8,7 +8,7 @@ export const dynamic = 'force-dynamic';
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { projectId, name, description } = body;
+    const { projectId, featureId, name, description } = body;
 
     if (!projectId) {
       return NextResponse.json({ error: 'Project ID is required' }, { status: 400 });
@@ -33,10 +33,6 @@ export async function POST(request: NextRequest) {
 
     const specContent = generateSpecMarkdown(spec, name);
 
-    // Generate feature ID
-    const featureCount = await prisma.feature.count({ where: { projectId } });
-    const featureId = `${String(featureCount + 1).padStart(3, '0')}-${name.toLowerCase().replace(/\s+/g, '-')}`;
-
     // Get latest constitution version for this project
     const latestConstitution = await prisma.constitution.findUnique({
       where: { projectId },
@@ -49,32 +45,68 @@ export async function POST(request: NextRequest) {
     });
     const constitutionVersionId = latestConstitution?.versions[0]?.id || null;
 
-    // Create feature in database with specContent - stage is 'specs' (not 'specify')
-    const feature = await prisma.feature.create({
-      data: {
-        projectId,
-        featureId,
-        name,
-        description: description || null,
-        stage: 'specs',
-        order: featureCount,
-        specContent, // Save spec markdown to database
-        constitutionVersionId // Track which constitution version was active
-      }
-    });
+    let feature;
 
-    // Create user stories in database
-    if (spec.userStories?.length) {
-      await prisma.userStory.createMany({
-        data: spec.userStories.map((story: any, index: number) => ({
-          featureId: feature.id,
-          storyId: story.id || `US${index + 1}`,
-          title: story.title,
-          description: story.description || null,
-          status: 'pending',
-          order: index,
-        }))
+    // If featureId is provided, update existing feature (transition from backlog to specs)
+    if (featureId) {
+      feature = await prisma.feature.update({
+        where: { id: featureId },
+        data: {
+          name,
+          description: description || null,
+          stage: 'specs', // Move to specs stage
+          specContent, // Save spec markdown to database
+          constitutionVersionId // Track which constitution version was active
+        }
       });
+
+      // Delete existing user stories and create new ones
+      await prisma.userStory.deleteMany({ where: { featureId: feature.id } });
+
+      // Create user stories in database
+      if (spec.userStories?.length) {
+        await prisma.userStory.createMany({
+          data: spec.userStories.map((story: any, index: number) => ({
+            featureId: feature.id,
+            storyId: story.id || `US${index + 1}`,
+            title: story.title,
+            description: story.description || null,
+            status: 'pending',
+            order: index,
+          }))
+        });
+      }
+    } else {
+      // Create new feature (legacy behavior for direct spec creation)
+      const featureCount = await prisma.feature.count({ where: { projectId } });
+      const newFeatureId = `${String(featureCount + 1).padStart(3, '0')}-${name.toLowerCase().replace(/\s+/g, '-')}`;
+
+      feature = await prisma.feature.create({
+        data: {
+          projectId,
+          featureId: newFeatureId,
+          name,
+          description: description || null,
+          stage: 'specs',
+          order: featureCount,
+          specContent, // Save spec markdown to database
+          constitutionVersionId // Track which constitution version was active
+        }
+      });
+
+      // Create user stories in database
+      if (spec.userStories?.length) {
+        await prisma.userStory.createMany({
+          data: spec.userStories.map((story: any, index: number) => ({
+            featureId: feature.id,
+            storyId: story.id || `US${index + 1}`,
+            title: story.title,
+            description: story.description || null,
+            status: 'pending',
+            order: index,
+          }))
+        });
+      }
     }
 
     return NextResponse.json({

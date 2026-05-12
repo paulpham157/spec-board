@@ -9,7 +9,8 @@ const MAX_FILE_SIZE = 100_000;
 const MAX_FILES = 50;
 
 export async function readLocalCode(source: LocalCodeSource): Promise<CodeFile[]> {
-  if (!isPathSafe(source.path)) {
+  const pathCheck = isPathSafe(source.path);
+  if (!pathCheck.safe) {
     throw new Error(`Path "${source.path}" is not allowed`);
   }
 

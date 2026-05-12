@@ -32,7 +32,9 @@ export function isPathSafe(requestedPath: string): PathSafetyResult {
     '/home',  // Linux user directories
   ];
 
-  const safe = allowedRoots.some(root => resolvedPath.startsWith(root));
+  const safe = allowedRoots.some(root =>
+    resolvedPath === root || resolvedPath.startsWith(root + path.sep)
+  );
 
   return { safe, resolvedPath };
 }

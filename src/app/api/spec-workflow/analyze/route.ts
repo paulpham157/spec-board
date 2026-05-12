@@ -61,9 +61,9 @@ function generateAnalysisMarkdown(analysis: any): string {
   // Summary
   content += `## Summary\n\n`;
   const avgScore = Math.round(
-    (analysis.specPlanConsistency?.score || 0 +
-     analysis.planTasksConsistency?.score || 0 +
-     analysis.constitutionAlignment?.score || 0) / 3
+    ((analysis.specPlanConsistency?.score || 0) +
+     (analysis.planTasksConsistency?.score || 0) +
+     (analysis.constitutionAlignment?.score || 0)) / 3
   );
   content += `**Overall Score**: ${avgScore}%\n\n`;
 
@@ -96,12 +96,9 @@ function generateAnalysisMarkdown(analysis: any): string {
     content += `## Issues\n\n`;
     for (const issue of analysis.issues) {
       const icon = issue.severity === 'error' ? '🔴' : issue.severity === 'warning' ? '🟡' : '🔵';
-      content += `${icon} **${issue.severity.toUpperCase()}**: ${issue.description}\n`;
+      content += `${icon} **${issue.severity.toUpperCase()}**: ${issue.message}\n`;
       if (issue.location) {
         content += `   *Location*: ${issue.location}\n`;
-      }
-      if (issue.suggestion) {
-        content += `   *Suggestion*: ${issue.suggestion}\n`;
       }
       content += '\n';
     }

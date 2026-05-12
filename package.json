@@ -7,7 +7,7 @@
     "dev": "next dev",
     "build": "next build",
     "start": "dotenv -- sh -c 'next start -p ${PORT:-3000}'",
-    "lint": "next lint",
+    "lint": "pnpm exec tsc --noEmit",
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",

@@ -183,9 +183,19 @@ export function PlanModal({ feature, onClose, onStageChange, onDelete, onGenerat
                 <p className="text-[var(--foreground)] font-medium mb-2">
                   Create Implementation Plan
                 </p>
-                <p className="text-sm text-[var(--muted-foreground)]">
+                <p className="text-sm text-[var(--muted-foreground)] mb-6">
                   Click "Generate Plan" to create a technical implementation plan based on your spec and clarifications.
                 </p>
+                <button
+                  onClick={handleGeneratePlan}
+                  disabled={status === 'generating'}
+                  className="btn btn-primary btn-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {status === 'generating' && (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  )}
+                  Generate Plan
+                </button>
               </div>
             </div>
           ) : (

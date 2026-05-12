@@ -153,6 +153,9 @@ export async function POST(request: NextRequest) {
         description: description?.trim() || null,
         stage: 'backlog',
         order: newOrder,
+        specContent,
+        planContent,
+        tasksContent,
       },
     });
 

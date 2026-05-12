@@ -172,9 +172,9 @@ export function generateAnalysisMarkdown(analysis: AnalysisResult): string {
 
   content += `## Summary\n\n`;
   const avgScore = Math.round(
-    (analysis.specPlanConsistency?.score || 0 +
-     analysis.planTasksConsistency?.score || 0 +
-     analysis.constitutionAlignment?.score || 0) / 3
+    ((analysis.specPlanConsistency?.score || 0) +
+     (analysis.planTasksConsistency?.score || 0) +
+     (analysis.constitutionAlignment?.score || 0)) / 3
   );
   content += `**Overall Score**: ${avgScore}%\n\n`;
 
